@@ -1,0 +1,7 @@
+Temporary instructions before a strcutured requirements.txt
+
+You should
+pip install git+https://github.com/AlessandroCesaTs/gym-ergojr.git
+copy the directory gym_ergojr/scenese from https://github.com/fgolemo/gym-ergojr/tree/master in
+pip install torch  (use cpu only version if you don't want cuda)
+pip install stablebaseline3
