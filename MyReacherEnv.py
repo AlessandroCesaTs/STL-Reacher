@@ -26,9 +26,11 @@ class MyReacherEnv(ErgoReacherEnv):
         self.robot.act2(qpos[:6])
         self.robot.step()
 
-        self.goal=np.array([0,0,0])
+        self.goal=np.array([-3.0054110627231243e-05, 0.10567847370112818, 0.016724975088488764])
         self.dist.goal = self.goal
         self.ball.changePos(self.goal, 4)
+        for _ in range(25):
+            self.robot.step()
 
         self.is_initialized = True
 
