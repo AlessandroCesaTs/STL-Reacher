@@ -1,24 +1,35 @@
 import os
 import numpy as np
+import gymnasium as gym
 import pybullet as p
 import cv2
 from gymnasium import spaces
-from gym_ergojr.envs.ergo_reacher_env import ErgoReacherEnv
+from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.pybullet import DistanceBetweenObjects
 
-class MyReacherEnv(ErgoReacherEnv):
+class MyReacherEnv(gym.Env):
     def __init__(self,video_path):
         super().__init__()
+        self.max_force=1
+        self.max_vel=18
+        self.robot = SingleRobot()
+        self.ball = Ball()
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32) 
         self.steps=0
         self.max_steps=1000
         self.goal=np.array([-0.012135819251746286, -0.0843113137763625, 0.16126595580699604])
         self.avoid=np.array([-0.04458391394299169, -0.009719424686773021, 0.20094343703790016])
         self.avoid_ball=Ball()
+        self.dist = DistanceBetweenObjects(
+            bodyA=self.robot.id, bodyB=self.ball.id, linkA=13, linkB=1)
         self.avoid_dist = DistanceBetweenObjects(
             bodyA=self.robot.id, bodyB=self.avoid_ball.id, linkA=13, linkB=1)
         self.GOAL_REACHED_DISTANCE = -0.016  # distance between robot tip and goal under which the task is considered solved
+        
+
+        self.episodes=0
 
         self.video_mode=False
         self.frames=[]
@@ -62,13 +73,11 @@ class MyReacherEnv(ErgoReacherEnv):
 
         distance_from_avoid=self.avoid_dist.query()
         
-
         reward *= -1  # the reward is the inverse distance
         if distance_from_avoid<-self.GOAL_REACHED_DISTANCE:
             truncated=True
             reward=-1
         elif reward > self.GOAL_REACHED_DISTANCE:  # this is a bit arbitrary, but works well
-            self.goals_done += 1
             terminated = True
             reward = 1
 
@@ -76,7 +85,7 @@ class MyReacherEnv(ErgoReacherEnv):
 
     def _capture_image(self):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0, 0, 0],
-                                                          distance=1,
+                                                          distance=1.5,
                                                           yaw=50,
                                                           pitch=-35,
                                                           roll=0,
@@ -132,3 +141,11 @@ class MyReacherEnv(ErgoReacherEnv):
     def disable_video_mode(self):
         self.video_mode=False
         self.frames=[]
+
+    def _get_obs(self):
+        obs = self.robot.observe()
+        return obs
+    
+    def close(self):
+        self.robot.close()
+
