@@ -16,20 +16,19 @@ mean_reward_callback=MeanRewardCallback(verbose=1)
 model = PPO("MlpPolicy", env,verbose=1)
 
 start_time=time.time()
-model.learn(total_timesteps=25000, callback=mean_reward_callback)
+model.learn(total_timesteps=81920, callback=mean_reward_callback)
 print(f"Time: {time.time()-start_time}")
 
 env.close()
 
 graphical_env=MyReacherEnv(gym.make("ErgoReacher-Graphical-Simple-v1"))
 obs=graphical_env.reset()[0]
-print(f"goal is {graphical_env.goal}")
 
 final_rewards=[]
 
-for i in range(100):
+for i in range(1000):
     action, _states = model.predict(obs)
-    time.sleep(0.3)
+    time.sleep(0.2)
     obs, reward, terminated, truncated, info = graphical_env.step(action)
     final_rewards.append(reward)
     if terminated or truncated:

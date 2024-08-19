@@ -1,50 +1,134 @@
+import os
 import numpy as np
 import pybullet as p
+import cv2
+from gymnasium import spaces
 from gym_ergojr.envs.ergo_reacher_env import ErgoReacherEnv
+from gym_ergojr.sim.objects import Ball
+from gym_ergojr.utils.pybullet import DistanceBetweenObjects
 
 class MyReacherEnv(ErgoReacherEnv):
-    def __init__(self,env):
-        super().__init__(env,simple=True)
+    def __init__(self,video_path):
+        super().__init__()
+        self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32) 
+        self.steps=0
+        self.max_steps=1000
+        self.goal=np.array([-0.012135819251746286, -0.0843113137763625, 0.16126595580699604])
+        self.avoid=np.array([-0.04458391394299169, -0.009719424686773021, 0.20094343703790016])
+        self.avoid_ball=Ball()
+        self.avoid_dist = DistanceBetweenObjects(
+            bodyA=self.robot.id, bodyB=self.avoid_ball.id, linkA=13, linkB=1)
         self.GOAL_REACHED_DISTANCE = -0.016  # distance between robot tip and goal under which the task is considered solved
-        self.RADIUS = 0.2022
-        self.DIA = 2 * self.RADIUS
-        self.RESET_EVERY = 5  # for the gripper
+
+        self.video_mode=False
+        self.frames=[]
+
+        os.makedirs(video_path, exist_ok=True)
+        self.video_path=os.path.join(video_path,'simulation.avi')
+        self.image_size=(640,480)
+        self.fps=10
 
     def reset(self,**kwargs):
-        self.goals_done=0
         self.episodes+=1
+        self.steps=0
         
-        if self.episodes >= self.restart_every_n_episodes:
-            self.robot.hard_reset()  # this always has to go first
-            self.ball.hard_reset()
-            self._setDist()
-            self.episodes = 0
-
         qpos=np.zeros(12)
         self.robot.reset()
         self.robot.set(qpos)
         self.robot.act2(qpos[:6])
         self.robot.step()
 
-        self.goal=np.array([-3.0054110627231243e-05, 0.10567847370112818, 0.016724975088488764])
         self.dist.goal = self.goal
         self.ball.changePos(self.goal, 4)
+        self.avoid_dist.goal = self.avoid
+        self.avoid_ball.changePos(self.avoid, 4)
         for _ in range(25):
             self.robot.step()
-
-        self.is_initialized = True
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
 
+        if self.video_mode:
+            self.frames=[]
+
         return observation,reset_info
 
+    def _getReward(self):
+        terminated=False
+        truncated = False
 
+        reward = self.dist.query()
+        distance = reward.copy()
 
+        distance_from_avoid=self.avoid_dist.query()
+        
 
+        reward *= -1  # the reward is the inverse distance
+        if distance_from_avoid<-self.GOAL_REACHED_DISTANCE:
+            truncated=True
+            reward=-1
+        elif reward > self.GOAL_REACHED_DISTANCE:  # this is a bit arbitrary, but works well
+            self.goals_done += 1
+            terminated = True
+            reward = 1
+
+        return reward, terminated, truncated, distance
+
+    def _capture_image(self):
+        view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0, 0, 0],
+                                                          distance=1,
+                                                          yaw=50,
+                                                          pitch=-35,
+                                                          roll=0,
+                                                          upAxisIndex=2)
+        
+        proj_matrix = p.computeProjectionMatrixFOV(fov=30,
+                                                   aspect=float(self.image_size[0]) / self.image_size[1],
+                                                   nearVal=0.1,
+                                                   farVal=100.0)
+        (_, _, px, _, _) = p.getCameraImage(width=self.image_size[0],
+                                            height=self.image_size[1],
+                                            viewMatrix=view_matrix,
+                                            projectionMatrix=proj_matrix,
+                                            renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        rgb_array = np.array(px)
+        image_array=rgb_array.reshape((self.image_size[1],self.image_size[0],4))
+        image_array=image_array[:, :, :3] #remove alpha channel
+        image_array = image_array.astype(np.uint8) #convert to correct type for CV2
+        return image_array 
+
+    def save_video(self):
+        if self.frames:
+            out=cv2.VideoWriter(self.video_path,cv2.VideoWriter_fourcc(*'XVID'),fps=self.fps,frameSize=self.image_size)
+            for image in self.frames:
+                out.write(image)
+            out.release()
+        
 
     def step(self, action):
-        obs,reward,done,info=super().step(action)
-        terminated=done
-        truncated=False
-        return obs,reward,terminated,truncated,info
+        action=np.array(action)
+
+        self.robot.act2(action, max_force=self.max_force, max_vel=self.max_vel)
+        self.robot.step()
+
+        reward, terminated, truncated, dist = self._getReward()
+
+        obs = self._get_obs()
+
+        self.steps+=1
+
+        if not truncated:
+            truncated=self.steps>self.max_steps
+
+        if self.video_mode:
+            image=self._capture_image()
+            self.frames.append(image)
+        
+        return obs,reward,terminated,truncated,{"distance": dist}
+
+    def enable_video_mode(self):
+        self.video_mode=True
+
+    def disable_video_mode(self):
+        self.video_mode=False
+        self.frames=[]
