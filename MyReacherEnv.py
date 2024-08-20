@@ -14,14 +14,14 @@ class MyReacherEnv(gym.Env):
         self.max_force=1
         self.max_vel=18
         self.robot = SingleRobot()
-        self.ball = Ball()
+        self.ball = Ball(color="green")
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32) 
         self.steps=0
         self.max_steps=1000
         self.goal=np.array([-0.012135819251746286, -0.0843113137763625, 0.16126595580699604])
         self.avoid=np.array([-0.04458391394299169, -0.009719424686773021, 0.20094343703790016])
-        self.avoid_ball=Ball()
+        self.avoid_ball=Ball(color="red")
         self.dist = DistanceBetweenObjects(
             bodyA=self.robot.id, bodyB=self.ball.id, linkA=13, linkB=1)
         self.avoid_dist = DistanceBetweenObjects(
