@@ -6,55 +6,51 @@ import cv2
 from gymnasium import spaces
 from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
-from gym_ergojr.utils.pybullet import DistanceBetweenObjects
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,video_path):
+    def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,steps_to_set_goal=200,visual=False,video_path=os.getcwd()):
         super().__init__()
-        self.max_force=1
-        self.max_vel=18
-        self.robot = SingleRobot()
-        self.ball = Ball(color="green")
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32) 
-        self.steps=0
-        self.max_steps=1000
-        self.goal=np.array([-0.012135819251746286, -0.0843113137763625, 0.16126595580699604])
-        self.avoid=np.array([-0.04458391394299169, -0.009719424686773021, 0.20094343703790016])
-        self.avoid_ball=Ball(color="red")
-        self.dist = DistanceBetweenObjects(
-            bodyA=self.robot.id, bodyB=self.ball.id, linkA=13, linkB=1)
-        self.avoid_dist = DistanceBetweenObjects(
-            bodyA=self.robot.id, bodyB=self.avoid_ball.id, linkA=13, linkB=1)
-        self.GOAL_REACHED_DISTANCE = -0.016  # distance between robot tip and goal under which the task is considered solved
-        
 
+        self.num_of_goals=num_of_goals
+        self.num_of_avoids=num_of_avoids
+        self.steps_to_set_goal=steps_to_set_goal
+
+        self.robot = SingleRobot(debug=visual)
+        self.goal_balls=[Ball(color="green") for _ in range(self.num_of_goals)]
+        self.avoid_balls=[Ball(color="red") for _ in range(self.num_of_avoids)]
+        
+        self.min_distance_between_goal_and_avoid=0.02
+        self.set_goals_and_avoids()
+
+        for i in range(self.num_of_goals):
+            self.goal_balls[i].changePos(self.goals[i], 4)
+        for i in range(self.num_of_avoids):
+            self.avoid_balls[i].changePos(self.avoids[i], 4)
+
+        for _ in range(25):
+            self.robot.step()
+
+        self.goal_sphere_radius = -0.016  # distance between robot tip and goal under which the task is considered solved
+
+        self.steps=0
+        self.max_steps=max_steps  
+        self.goal_to_reach_index=0
         self.episodes=0
 
         self.video_mode=False
         self.frames=[]
-
         os.makedirs(video_path, exist_ok=True)
         self.video_path=os.path.join(video_path,'simulation.avi')
         self.image_size=(640,480)
-        self.fps=10
+        self.fps=5
 
     def reset(self,**kwargs):
         self.episodes+=1
         self.steps=0
         
-        qpos=np.zeros(12)
         self.robot.reset()
-        self.robot.set(qpos)
-        self.robot.act2(qpos[:6])
-        self.robot.step()
-
-        self.dist.goal = self.goal
-        self.ball.changePos(self.goal, 4)
-        self.avoid_dist.goal = self.avoid
-        self.avoid_ball.changePos(self.avoid, 4)
-        for _ in range(25):
-            self.robot.step()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -62,24 +58,29 @@ class MyReacherEnv(gym.Env):
         if self.video_mode:
             self.frames=[]
 
+        self.goal_to_reach_index=0
+
         return observation,reset_info
 
     def _getReward(self):
         terminated=False
         truncated = False
 
-        reward = self.dist.query()
+        reward=self.distance_from_goal()
         distance = reward.copy()
 
-        distance_from_avoid=self.avoid_dist.query()
+        distance_from_avoid=self.distance_from_avoid()
         
         reward *= -1  # the reward is the inverse distance
-        if distance_from_avoid<-self.GOAL_REACHED_DISTANCE:
+        if distance_from_avoid<-self.goal_sphere_radius:
             truncated=True
             reward=-1
-        elif reward > self.GOAL_REACHED_DISTANCE:  # this is a bit arbitrary, but works well
-            terminated = True
+        elif reward > self.goal_sphere_radius:  # this is a bit arbitrary, but works well
             reward = 1
+            if self.goal_to_reach_index <self.num_of_goals-1:
+                self.goal_to_reach_index+=1
+            else:
+                terminated = True                
 
         return reward, terminated, truncated, distance
 
@@ -117,7 +118,7 @@ class MyReacherEnv(gym.Env):
     def step(self, action):
         action=np.array(action)
 
-        self.robot.act2(action, max_force=self.max_force, max_vel=self.max_vel)
+        self.robot.act2(action)
         self.robot.step()
 
         reward, terminated, truncated, dist = self._getReward()
@@ -148,4 +149,43 @@ class MyReacherEnv(gym.Env):
     
     def close(self):
         self.robot.close()
+    def distance_from_goal(self):
+        goal_to_reach=self.goals[self.goal_to_reach_index]
+        return np.linalg.norm(goal_to_reach-self.get_position_of_end_effector())
+    def distance_from_avoid(self):
+        return np.linalg.norm(self.avoids-self.get_position_of_end_effector())
+    def get_position_of_end_effector(self):
+        return np.array(p.getLinkState(self.robot.id,13)[0])
+
+    def set_goals_and_avoids(self):
+        goals=[]
+        avoids=[]
+
+        while len(goals)<self.num_of_goals or len(avoids)<self.num_of_avoids:
+            goal,avoid=self.get_goal()
+            if self.is_valid_position(goal,avoids):
+                goals.append(goal)
+            if self.is_valid_position(avoid,goals):
+                avoids.append(avoid)
+
+        self.goals=np.array(goals[:self.num_of_goals])
+        self.avoids=np.array(avoids[:self.num_of_avoids])
+
+    def get_goal(self):
+        avoid=None
+        for i in range(self.steps_to_set_goal):
+            if i%(self.steps_to_set_goal//4)==0:
+                action=np.random.uniform(-1,1,6)
+            self.robot.act2(action)
+            self.robot.step()
+            if i%(self.steps_to_set_goal//2)==0:
+                avoid=self.get_position_of_end_effector()
+        goal=self.get_position_of_end_effector()
+        return goal, avoid
+    
+    def is_valid_position(self,point,other_points):
+        for other_point in other_points:
+            if np.linalg.norm(point-other_point)<self.min_distance_between_goal_and_avoid:
+                return False
+        return True
 
