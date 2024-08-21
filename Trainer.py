@@ -27,11 +27,11 @@ class Trainer:
         print(f"Total Time: {(time.time()-start_time)/60}")
         self.model.save(self.model_path)
 
-    def test(self):
+    def test(self,test_steps=200):
         test_rewards=[]
         observation=self.environment.reset()[0]
         self.environment.enable_video_mode()
-        for i in range(200):
+        for i in range(test_steps):
             action,_states=self.model.predict(observation)
             observation, reward, terminated, truncated, info = self.environment.step(action)
             test_rewards.append(reward)

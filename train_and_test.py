@@ -13,5 +13,6 @@ environment=MyReacherEnv(num_of_goals=3,num_of_avoids=1,video_path=video_path)
 model = PPO("MlpPolicy", environment)
 
 trainer=Trainer(environment,model,output_path)
-trainer.train(total_timesteps=204800)
+trainer.train(total_timesteps=4096)
+print("Testing")
 trainer.test()
