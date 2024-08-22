@@ -1,12 +1,14 @@
 import os
 import time
 import matplotlib.pyplot as plt
+from stable_baselines3.common.vec_env import VecEnv
 from MeanRewardCallback import MeanRewardCallback
 
 class Trainer:
     def __init__(self,environment,model,output_path):
         self.environment=environment
         self.model=model
+        self.is_vectorized_environment=isinstance(self.environment,VecEnv)
 
         os.makedirs(os.path.join(output_path,'models'), exist_ok=True)
         os.makedirs(os.path.join(output_path,'rewards'), exist_ok=True)
@@ -29,15 +31,23 @@ class Trainer:
 
     def test(self,test_steps=200):
         test_rewards=[]
-        observation=self.environment.reset()[0]
-        self.environment.enable_video_mode()
+        if self.is_vectorized_environment:
+            observation,info=self.environment.env_method('reset',indices=0)[0] #env_method returns list
+            self.environment.env_method("enable_video_mode",indices=0)
+            
+        else:
+            observation=self.environment.reset()[0]
+            self.environment.enable_video_mode()
         for i in range(test_steps):
             action,_states=self.model.predict(observation)
-            observation, reward, terminated, truncated, info = self.environment.step(action)
+            observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
             test_rewards.append(reward)
             if terminated or truncated:
                 break
-        self.environment.save_video()
+        if self.is_vectorized_environment:
+            self.environment.env_method('save_video',indices=0)
+        else:
+            self.environment.save_video()
 
         plt.plot(test_rewards)
         plt.xlabel("Step")
@@ -46,7 +56,6 @@ class Trainer:
         plt.close()
 
         
-
 
 
 

@@ -11,7 +11,7 @@ class MyReacherEnv(gym.Env):
     def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,steps_to_set_goal=200,visual=False,video_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32) 
+        self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
 
         self.num_of_goals=num_of_goals
         self.num_of_avoids=num_of_avoids
