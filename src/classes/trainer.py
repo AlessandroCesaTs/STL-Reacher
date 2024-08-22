@@ -2,7 +2,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 from stable_baselines3.common.vec_env import VecEnv
-from MeanRewardCallback import MeanRewardCallback
+from classes.mean_reward_callback import MeanRewardCallback
 
 class Trainer:
     def __init__(self,environment,model,output_path):

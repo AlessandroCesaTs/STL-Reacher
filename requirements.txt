@@ -1,0 +1,7 @@
+git+https://github.com/AlessandroCesaTs/gym-ergojr.git
+gymnasium==1.0.0a2
+matplotlib==3.9.2
+numpy==2.1.0
+opencv_python==4.10.0.84
+pybullet==3.2.6
+stable_baselines3==2.3.2

@@ -8,7 +8,7 @@ from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,steps_to_set_goal=200,visual=False,video_path=os.getcwd()):
+    def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,steps_to_set_goal=200,visual=False,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
@@ -41,8 +41,8 @@ class MyReacherEnv(gym.Env):
 
         self.video_mode=False
         self.frames=[]
-        os.makedirs(video_path, exist_ok=True)
-        self.video_path=os.path.join(video_path,'simulation.avi')
+        os.makedirs(os.path.join(output_path,'videos'), exist_ok=True)
+        self.video_path=os.path.join(output_path,'videos','simulation.avi')
         self.image_size=(640,480)
         self.fps=5
 
