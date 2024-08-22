@@ -26,7 +26,7 @@ class Trainer:
         self.environment.reset()
         start_time=time.time()
         self.model.learn(total_timesteps=total_timesteps,callback=self.callback)
-        print(f"Total Time: {(time.time()-start_time)/60}")
+        print(f"Total Time: {(time.time()-start_time)/60} minutes")
         self.model.save(self.model_path)
 
     def test(self,test_steps=200):

@@ -12,12 +12,12 @@
 #SBATCH --get-user-env
 
 SCRIPT_DIR=$(dirname "$0")   #Get the directory where this script is located
-source "$SCRIPT_DIR/slurm_utils.sh"  #source run_cmd wich returns srun if i'm on a slurm environment
+source "$SCRIPT_DIR/slurm_utils.sh"  #source srun_if_on_slurm wich returns srun if i'm on a slurm environment
 
 source env/bin/activate
 
-echo "Start Training"
+echo "Start Testing"
 
-run_cmd python src/train.py
+srun_if_on_slurm python3 src/test.py
 
-echo "Done Training"
+echo "Done Testing"
