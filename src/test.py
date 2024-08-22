@@ -1,24 +1,35 @@
 import os
-from classes.trainer import Trainer
-from classes.my_reacher_env import MyReacherEnv
+import argparse
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv
+from classes.trainer import Trainer
+from classes.my_reacher_env import MyReacherEnv
 
-if __name__=='__main__':
+if __name__=="__main__":
     
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--output_path',type=str,default=os.getcwd())
+    parser.add_argument('--model_path',type=str,default=os.path.join(os.getcwd(),'models','model.zip'))
+    parser.add_argument('--total_timesteps',type=int,default=2048)
+    parser.add_argument('--n_envs',type=int,default=1)
+    parser.add_argument('--num_of_goals',type=int,default=1)
+    parser.add_argument('--num_of_avoids',type=int,default=1)
 
-    output_path=os.getcwd()
+    args=parser.parse_args()
+    output_path=args.output_path
+    model_path=args.model_path
+    total_timesteps=args.total_timesteps
+    n_envs=args.n_envs
+    num_of_goals=args.num_of_goals
+    num_of_avoids=args.num_of_avoids
 
-    os.makedirs(os.path.join(output_path,'videos'), exist_ok=True)
-
-    video_path=os.path.join(output_path,'videos')
-
-    environment=make_vec_env(MyReacherEnv,n_envs=1,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':3,'num_of_avoids':1,'video_path':video_path})
-    #environment=MyReacherEnv(video_path=video_path)
-
-    model=PPO.load('models/model.zip',environment)
+    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
+        
+    model=PPO.load(model_path,environment)
 
     trainer=Trainer(environment,model,output_path)
 
     trainer.test(test_steps=10)
+    
+    environment.close()

@@ -2,7 +2,7 @@ import os
 import argparse
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv
 from classes.trainer import Trainer
 from classes.my_reacher_env import MyReacherEnv
 
@@ -27,8 +27,7 @@ if __name__=="__main__":
     model = PPO("MlpPolicy", environment)
 
     trainer=Trainer(environment,model,output_path)
+    
     trainer.train(total_timesteps=total_timesteps)
-    print("Training done, started testing")
-    trainer.test()
     
     environment.close()

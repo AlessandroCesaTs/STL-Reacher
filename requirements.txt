@@ -1,5 +1,5 @@
 git+https://github.com/AlessandroCesaTs/gym-ergojr.git
-gymnasium==1.0.0a2
+gymnasium==0.29.1
 matplotlib==3.9.2
 numpy==2.1.0
 opencv_python==4.10.0.84
