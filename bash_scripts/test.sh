@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -j train_and_test.sh
-#SBATCH -o train_and_test.o
+#SBATCH -J test.sh
+#SBATCH -o test.o
 #SBATCH --partition=GPU
 #SBATCH --nodes=1
-#SBATCH --ntask=1
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --gpus=1
 #SBATCH --mem=32G
@@ -11,8 +11,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-SCRIPT_DIR=$(dirname "$0")   #Get the directory where this script is located
-source "$SCRIPT_DIR/slurm_utils.sh"  #source srun_if_on_slurm wich returns srun if i'm on a slurm environment
+source bash_scripts/slurm_utils.sh  #source srun_if_on_slurm wich returns srun if i'm on a slurm environment
 
 source env/bin/activate
 

@@ -1,0 +1,25 @@
+Start Testing
+pybullet build time: Nov 28 2023 23:45:17
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.1.0 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "/orfeo/cephfs/home/dssc/acesa000/STL-Reacher/src/test.py", line 7, in <module>
+    from classes.my_reacher_env import MyReacherEnv
+  File "/orfeo/cephfs/home/dssc/acesa000/STL-Reacher/src/classes/my_reacher_env.py", line 4, in <module>
+    import pybullet as p
+AttributeError: _ARRAY_API not found
+Traceback (most recent call last):
+  File "/orfeo/cephfs/home/dssc/acesa000/STL-Reacher/src/test.py", line 7, in <module>
+    from classes.my_reacher_env import MyReacherEnv
+  File "/orfeo/cephfs/home/dssc/acesa000/STL-Reacher/src/classes/my_reacher_env.py", line 4, in <module>
+    import pybullet as p
+ImportError: numpy.core.multiarray failed to import
+srun: error: gpu001: task 0: Exited with exit code 1
+Done Testing
