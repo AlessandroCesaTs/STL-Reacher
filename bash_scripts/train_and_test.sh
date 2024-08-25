@@ -1,9 +1,11 @@
 #!/bin/bash
 
-source bash_scripts/slurm_utils.sh  #source run_cmd wich returns srun if i'm on a slurm environment
-
-train_job_id=$(bash_or_sbatch bash_scripts/train.sh | awk '{print $4}')
-
-test_job_id=$(bash_or_sbatch_with_dependency $train_job_id bash_scripts/test.sh)
-
-echo "Submitted jobs $train_job_id, $test_job_id"
+if command -v sbatch &> /dev/null; then
+    #I'm on slurm
+    train_job_id=$(sbatch bash_scripts/train.sh | awk '{print $4}')
+    test_job_id=$(sbatch --dependency=afterok:$train_job_id bash_scripts/tesr.sh | awk '{print $4}')
+    echo "Submitted jobs $train_job_id, $test_job_id"
+else
+    bash_scripts/train.sh
+    bash_scripts/test.sh
+fi

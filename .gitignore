@@ -1,6 +1,9 @@
 #slurm outputs
 *.out
 
+#bash script to download video
+bash_scripts/get_videos.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
