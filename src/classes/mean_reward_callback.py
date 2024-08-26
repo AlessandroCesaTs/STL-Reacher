@@ -8,7 +8,6 @@ class MeanRewardCallback(BaseCallback):
         self.rewards_path=rewards_path
         self.plots_path=plots_path
         self.mean_rewards=[]
-        self.mean_rewards=[]
         self.current_rewards=0
         self.episode_length = 0
         self.episode=1
@@ -39,3 +38,5 @@ class MeanRewardCallback(BaseCallback):
         plt.ylabel("Mean Reward")
         plt.savefig(self.plots_path)
         plt.close()
+        print(f"Number of episodes {self.episode}")
+        print(f"Mean episode length {409600/self.episode}")

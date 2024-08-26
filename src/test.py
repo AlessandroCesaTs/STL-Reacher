@@ -11,7 +11,7 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument('--output_path',type=str,default=os.getcwd())
     parser.add_argument('--model_path',type=str,default=os.path.join(os.getcwd(),'models','model.zip'))
-    parser.add_argument('--total_timesteps',type=int,default=2048)
+    parser.add_argument('--test_steps',type=int,default=100)
     parser.add_argument('--n_envs',type=int,default=1)
     parser.add_argument('--num_of_goals',type=int,default=1)
     parser.add_argument('--num_of_avoids',type=int,default=1)
@@ -19,7 +19,7 @@ if __name__=="__main__":
     args=parser.parse_args()
     output_path=args.output_path
     model_path=args.model_path
-    total_timesteps=args.total_timesteps
+    test_steps=args.test_steps
     n_envs=args.n_envs
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
@@ -30,6 +30,6 @@ if __name__=="__main__":
 
     trainer=Trainer(environment,model,output_path)
 
-    trainer.test(test_steps=10)
+    trainer.test(test_steps=test_steps)
     
     environment.close()
