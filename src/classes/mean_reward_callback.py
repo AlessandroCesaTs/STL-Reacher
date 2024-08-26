@@ -1,35 +1,49 @@
 import csv
+import numpy as np
 import matplotlib.pyplot as plt
+from stable_baselines3.common import base_class
 from stable_baselines3.common.callbacks import BaseCallback
 
 class MeanRewardCallback(BaseCallback):
     def __init__(self,rewards_path,plots_path):
-        super(MeanRewardCallback,self).__init__()
+        super().__init__()
         self.rewards_path=rewards_path
         self.plots_path=plots_path
+        #self.num_of_envs=self.training_env.num_envs
         self.mean_rewards=[]
-        self.current_rewards=0
-        self.episode_length = 0
-        self.episode=1
+        #self.current_rewards=np.zeros(self.num_of_envs)
+        #self.current_lengths = np.zeros(self.num_of_envs)
+        #self.episodes=np.zeros(self.num_of_envs)
 
         with open(self.rewards_path,mode='w',newline='') as file:
             writer=csv.writer(file)
             writer.writerow(['Episode','Mean Reward'])
 
+    def init_callback(self, model: "base_class.BaseAlgorithm") -> None:
+        """
+        Initialize the callback by saving references to the
+        RL model and the training environment for convenience.
+        """
+        super().init_callback(model)
+        self.num_envs=self.training_env.num_envs
+        self.current_rewards=np.zeros(self.num_envs)
+        self.current_lengths = np.zeros(self.num_envs)
+        self.episodes=np.zeros(self.num_envs)
 
     def _on_step(self):
-        self.current_rewards+=self.locals['rewards'][0]
-        self.episode_length += 1
-        if self.locals['dones'][0]:
-            mean_reward = self.current_rewards/self.episode_length
-            self.mean_rewards.append(mean_reward)
-            with open(self.rewards_path,mode='a',newline='') as file:
-                writer=csv.writer(file)
-                writer.writerow([self.episode,mean_reward])
+        self.current_rewards+=self.locals['rewards']
+        self.current_lengths += 1
+        for i in range(self.num_envs):
+            if self.locals['dones'][i]:
+                mean_reward = self.current_rewards[i]/self.current_lengths[i]
+                self.mean_rewards.append(mean_reward)
+                with open(self.rewards_path,mode='a',newline='') as file:
+                    writer=csv.writer(file)
+                    writer.writerow([self.episodes[i]*(2+1),mean_reward])
 
-            self.current_rewards=0
-            self.episode_length = 0
-            self.episode+=1
+                self.current_rewards[i]=0
+                self.current_lengths [i]= 0
+                self.episodes[i]+=1
         return True
 
     def on_training_end(self):
@@ -38,5 +52,6 @@ class MeanRewardCallback(BaseCallback):
         plt.ylabel("Mean Reward")
         plt.savefig(self.plots_path)
         plt.close()
-        print(f"Number of episodes {self.episode}")
-        print(f"Mean episode length {409600/self.episode}")
+        num_of_episodes=np.sum(self.episodes).item()
+        print(f"Number of episodes {num_of_episodes}")
+        print(f"Mean episode length {4096/num_of_episodes}")
