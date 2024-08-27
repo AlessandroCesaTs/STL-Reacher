@@ -6,22 +6,24 @@ import cv2
 from gymnasium import spaces
 from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
+from gym_ergojr.utils.math import RandomPointInHalfSphere
+
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,steps_to_set_goal=200,visual=False,output_path=os.getcwd()):
+    def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
 
         self.num_of_goals=num_of_goals
         self.num_of_avoids=num_of_avoids
-        self.steps_to_set_goal=steps_to_set_goal
 
         self.robot = SingleRobot(debug=visual)
         self.goal_balls=[Ball(color="green") for _ in range(self.num_of_goals)]
         self.avoid_balls=[Ball(color="red") for _ in range(self.num_of_avoids)]
         
         self.min_distance_between_goal_and_avoid=0.02
+        self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
         self.set_goals_and_avoids()
 
         for i in range(self.num_of_goals):
@@ -161,27 +163,17 @@ class MyReacherEnv(gym.Env):
         goals=[]
         avoids=[]
 
-        while len(goals)<self.num_of_goals or len(avoids)<self.num_of_avoids:
-            goal,avoid=self.get_goal()
+        while len(goals)<self.num_of_goals:
+            goal=self.rhis.samplePoint()
             if self.is_valid_position(goal,avoids):
                 goals.append(goal)
+        
+        while len(avoids)<self.num_of_avoids:
+            avoid=self.rhis.samplePoint()
             if self.is_valid_position(avoid,goals):
                 avoids.append(avoid)
-
         self.goals=np.array(goals[:self.num_of_goals])
         self.avoids=np.array(avoids[:self.num_of_avoids])
-
-    def get_goal(self):
-        avoid=None
-        for i in range(self.steps_to_set_goal):
-            if i%(self.steps_to_set_goal//4)==0:
-                action=np.random.uniform(-1,1,6)
-            self.robot.act2(action)
-            self.robot.step()
-            if i%(self.steps_to_set_goal//2)==0:
-                avoid=self.get_position_of_end_effector()
-        goal=self.get_position_of_end_effector()
-        return goal, avoid
     
     def is_valid_position(self,point,other_points):
         for other_point in other_points:

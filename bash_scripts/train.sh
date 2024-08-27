@@ -17,5 +17,5 @@ source bash_scripts/slurm_utils.sh  #source srun_if_on_slurm wich returns srun i
 source env/bin/activate
 
 echo "Start Training"
-srun_if_on_slurm python3 src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=2048000 --n_envs=8
+srun_if_on_slurm python3 src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=4096
 echo "Done"
