@@ -23,7 +23,6 @@ if __name__=="__main__":
     num_of_avoids=args.num_of_avoids
 
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
-        
     model = PPO("MlpPolicy", environment)
 
     trainer=Trainer(environment,model,output_path)

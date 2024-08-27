@@ -9,11 +9,7 @@ class MeanRewardCallback(BaseCallback):
         super().__init__()
         self.rewards_path=rewards_path
         self.plots_path=plots_path
-        #self.num_of_envs=self.training_env.num_envs
         self.mean_rewards=[]
-        #self.current_rewards=np.zeros(self.num_of_envs)
-        #self.current_lengths = np.zeros(self.num_of_envs)
-        #self.episodes=np.zeros(self.num_of_envs)
 
         with open(self.rewards_path,mode='w',newline='') as file:
             writer=csv.writer(file)
@@ -39,7 +35,7 @@ class MeanRewardCallback(BaseCallback):
                 self.mean_rewards.append(mean_reward)
                 with open(self.rewards_path,mode='a',newline='') as file:
                     writer=csv.writer(file)
-                    writer.writerow([self.episodes[i]*(2+1),mean_reward])
+                    writer.writerow([self.episodes[i]*self.num_envs+i,mean_reward])
 
                 self.current_rewards[i]=0
                 self.current_lengths [i]= 0
@@ -54,4 +50,3 @@ class MeanRewardCallback(BaseCallback):
         plt.close()
         num_of_episodes=np.sum(self.episodes).item()
         print(f"Number of episodes {num_of_episodes}")
-        print(f"Mean episode length {4096/num_of_episodes}")
