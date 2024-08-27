@@ -10,6 +10,7 @@ class MeanRewardCallback(BaseCallback):
         self.rewards_path=rewards_path
         self.plots_path=plots_path
         self.mean_rewards=[]
+        self.tot_episodes=0
 
         with open(self.rewards_path,mode='w',newline='') as file:
             writer=csv.writer(file)
@@ -35,11 +36,12 @@ class MeanRewardCallback(BaseCallback):
                 self.mean_rewards.append(mean_reward)
                 with open(self.rewards_path,mode='a',newline='') as file:
                     writer=csv.writer(file)
-                    writer.writerow([self.episodes[i]*self.num_envs+i,mean_reward])
+                    writer.writerow([self.tot_episodes,mean_reward])
 
                 self.current_rewards[i]=0
                 self.current_lengths [i]= 0
                 self.episodes[i]+=1
+                self.tot_episodes+=1
         return True
 
     def on_training_end(self):
@@ -48,5 +50,4 @@ class MeanRewardCallback(BaseCallback):
         plt.ylabel("Mean Reward")
         plt.savefig(self.plots_path)
         plt.close()
-        num_of_episodes=np.sum(self.episodes).item()
-        print(f"Number of episodes {num_of_episodes}")
+        print(f"Number of episodes {self.tot_episodes}")
