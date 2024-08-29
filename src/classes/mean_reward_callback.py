@@ -50,12 +50,12 @@ class MyCallback(BaseCallback):
 
             for avoid_index in range(self.num_of_avoids):
                 self.distances_from_avoids[env_index][avoid_index].append(self.locals['infos'][env_index]["Distances from avoids"][avoid_index])
-
+            """
             if self.current_lengths[env_index]>1:
                 timeseries=self.get_time_series(env_index)
                 self.stl_robustnesses_1.append(self.monitor_1.monitor(RobSemantics(timeSeries=timeseries,currentState=0)))
                 self.stl_robustnesses_2.append(self.monitor_2.monitor(RobSemantics(timeSeries=timeseries,currentState=0)))
-
+            """
             if self.locals['dones'][env_index]:
                 mean_reward = self.current_rewards[env_index]/self.current_lengths[env_index]
                 self.mean_rewards.append(mean_reward)
