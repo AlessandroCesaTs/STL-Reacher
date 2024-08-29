@@ -2,7 +2,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 from stable_baselines3.common.vec_env import VecEnv
-from classes.mean_reward_callback import MeanRewardCallback
+from classes.mean_reward_callback import MyCallback
 
 class Trainer:
     def __init__(self,environment,model,output_path):
@@ -16,11 +16,10 @@ class Trainer:
 
         self.model_path=os.path.join(output_path,'models','model')
         rewards_path=os.path.join(output_path,'rewards','rewards.csv')
-        plots_path=os.path.join(output_path,'plots')
-        train_plot_path=os.path.join(plots_path,'train_rewards.png')
-        self.test_plot_path=os.path.join(plots_path,'test_rewards.png')
+        self.plots_path=os.path.join(output_path,'plots')
+        self.test_plot_path=os.path.join(self.plots_path,'test_rewards.png')
 
-        self.callback=MeanRewardCallback(rewards_path=rewards_path,plots_path=train_plot_path)
+        self.callback=MyCallback(rewards_path=rewards_path,plots_path=self.plots_path)
 
     def train(self,total_timesteps=81920):
         self.environment.reset()

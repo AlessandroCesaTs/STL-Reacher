@@ -22,7 +22,9 @@ if __name__=="__main__":
     test_steps=args.test_steps
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
-    n_envs=get_num_cpus()
+    #n_envs=get_num_cpus()
+    n_envs=1
+
 
 
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})

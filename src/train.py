@@ -13,8 +13,8 @@ if __name__=="__main__":
 
     parser=argparse.ArgumentParser()
     parser.add_argument('--output_path',type=str,default=os.getcwd())
-    parser.add_argument('--total_timesteps',type=int,default=2048)
-    parser.add_argument('--num_of_goals',type=int,default=1)
+    parser.add_argument('--total_timesteps',type=int,default=4096)
+    parser.add_argument('--num_of_goals',type=int,default=3)
     parser.add_argument('--num_of_avoids',type=int,default=1)
 
     args=parser.parse_args()
@@ -22,7 +22,8 @@ if __name__=="__main__":
     total_timesteps=args.total_timesteps
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
-    n_envs=get_num_cpus()
+    #n_envs=get_num_cpus()
+    n_envs=1
 
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
     model = PPO("MlpPolicy", environment)

@@ -34,7 +34,7 @@ class MyReacherEnv(gym.Env):
         for _ in range(25):
             self.robot.step()
 
-        self.goal_sphere_radius = -0.016  # distance between robot tip and goal under which the task is considered solved
+        self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
 
         self.steps=0
         self.max_steps=max_steps  
@@ -68,23 +68,24 @@ class MyReacherEnv(gym.Env):
         terminated=False
         truncated = False
 
-        reward=self.distance_from_goal()
-        distance = reward.copy()
+        distances_from_goals=self.distances_from_goals()
 
-        distance_from_avoid=self.distance_from_avoid()
+        distances_from_avoids=self.distance_from_avoid()
         
-        reward *= -1  # the reward is the inverse distance
-        if distance_from_avoid<-self.goal_sphere_radius:
+        if distances_from_avoids<self.goal_sphere_radius:
             truncated=True
             reward=-1
-        elif reward > self.goal_sphere_radius:  # this is a bit arbitrary, but works well
+        elif distances_from_goals[self.goal_to_reach_index] < self.goal_sphere_radius:  # this is a bit arbitrary, but works well
             reward = 1
             if self.goal_to_reach_index <self.num_of_goals-1:
                 self.goal_to_reach_index+=1
             else:
-                terminated = True                
+                terminated = True 
+        else:
+            reward=-1*distances_from_goals[self.goal_to_reach_index]
+        info={"Distances from goals":distances_from_goals, "Distances from avoids":distances_from_avoids} 
 
-        return reward, terminated, truncated, distance
+        return reward, terminated, truncated, info
 
     def _capture_image(self):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0, 0, 0],
@@ -123,7 +124,7 @@ class MyReacherEnv(gym.Env):
         self.robot.act2(action)
         self.robot.step()
 
-        reward, terminated, truncated, dist = self._getReward()
+        reward, terminated, truncated, info = self._getReward()
 
         obs = self._get_obs()
 
@@ -136,7 +137,7 @@ class MyReacherEnv(gym.Env):
             image=self._capture_image()
             self.frames.append(image)
         
-        return obs,reward,terminated,truncated,{"distance": dist}
+        return obs,reward,terminated,truncated,info
 
     def enable_video_mode(self):
         self.video_mode=True
@@ -151,11 +152,10 @@ class MyReacherEnv(gym.Env):
     
     def close(self):
         self.robot.close()
-    def distance_from_goal(self):
-        goal_to_reach=self.goals[self.goal_to_reach_index]
-        return np.linalg.norm(goal_to_reach-self.get_position_of_end_effector())
+    def distances_from_goals(self):
+        return np.linalg.norm(self.goals-self.get_position_of_end_effector(),axis=1)
     def distance_from_avoid(self):
-        return np.linalg.norm(self.avoids-self.get_position_of_end_effector())
+        return np.array(np.linalg.norm(self.avoids-self.get_position_of_end_effector(),axis=1))
     def get_position_of_end_effector(self):
         return np.array(p.getLinkState(self.robot.id,13)[0])
 
