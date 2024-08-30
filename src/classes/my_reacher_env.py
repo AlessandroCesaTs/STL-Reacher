@@ -1,16 +1,28 @@
 import os
+import shutil
+import tempfile
 import numpy as np
 import gymnasium as gym
 import pybullet as p
 import cv2
+import time
 from gymnasium import spaces
 from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
 
+urdf_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
+
+def copy_urdf_directory(urdf_dir):
+    temp_dir = tempfile.mkdtemp()
+    temp_urdf_dir=os.path.join(temp_dir,os.path.basename(urdf_dir))
+    shutil.copytree(urdf_dir, temp_urdf_dir,dirs_exist_ok=True)
+    print(f"temporary urdf dir is {temp_urdf_dir}",flush=True)
+    return temp_urdf_dir
+
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
+    def __init__(self,urdf_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/',num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
@@ -18,9 +30,12 @@ class MyReacherEnv(gym.Env):
         self.num_of_goals=num_of_goals
         self.num_of_avoids=num_of_avoids
 
-        self.robot = SingleRobot(debug=visual)
-        self.goal_balls=[Ball(color="green") for _ in range(self.num_of_goals)]
-        self.avoid_balls=[Ball(color="red") for _ in range(self.num_of_avoids)]
+        self.urdf_dir=copy_urdf_directory(urdf_dir)
+        time.sleep(5)
+
+        self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
+        self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
+        self.avoid_balls=[Ball(self.urdf_dir,color="red") for _ in range(self.num_of_avoids)]
         
         self.min_distance_between_goal_and_avoid=0.02
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)

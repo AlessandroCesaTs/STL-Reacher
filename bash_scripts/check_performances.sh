@@ -1,9 +1,4 @@
-sbatch -J train_1 -o train_1.out --cpus-per-task=1 bash_scripts/train.sh
-sbatch -J train_2 -o train_2.out --cpus-per-task=2 bash_scripts/train.sh
-sbatch -J train_4 -o train_4.out --cpus-per-task=4 bash_scripts/train.sh
-sbatch -J train_8 -o train_8.out --cpus-per-task=8 bash_scripts/train.sh
-sbatch -J train_16 -o train_16.out --cpus-per-task=16 bash_scripts/train.sh
-sbatch -J train_17 -o train_17.out --cpus-per-task=17 bash_scripts/train.sh
-sbatch -J train_32 -o train_32.out --cpus-per-task=32 bash_scripts/train.sh
-sbatch -J train_64 -o train_64.out --cpus-per-task=64 bash_scripts/train.sh
-sbatch -J train_128 -o train_128.out --cpus-per-task=128 bash_scripts/train.sh
+for i in 1 2 4 8 16 17 32 64 128
+do
+    sbatch -J train_${i} -o train_${i}.out --cpus-per-task=$i bash_scripts/train.sh
+done

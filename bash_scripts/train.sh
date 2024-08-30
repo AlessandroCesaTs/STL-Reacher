@@ -14,7 +14,7 @@
 source bash_scripts/slurm_utils.sh  #source srun_if_on_slurm wich returns srun if i'm on a slurm environment
 
 source env/bin/activate
-for i in {0..2}
+for i in {0..0}
 do
     echo "Start Training"
     srun_if_on_slurm python3 -u src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=4096
