@@ -44,7 +44,7 @@ if __name__=="__main__":
     #n_envs=get_num_cpus()
     n_envs=1
 
-    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
+    #environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
     environment=SubprocVecEnv([make_env(i) for i in range(n_envs)])
     model = PPO("MlpPolicy", environment)
 
