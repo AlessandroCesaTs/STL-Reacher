@@ -35,8 +35,8 @@ class MyCallback(BaseCallback):
         self.num_envs=self.training_env.num_envs
         self.current_rewards=np.zeros(self.num_envs)
         self.current_lengths = np.zeros(self.num_envs)
-        self.num_of_goals=self.training_env.get_attr("num_of_goals")[0]
-        self.num_of_avoids=self.training_env.get_attr("num_of_avoids")[0]
+        self.num_of_goals=self.training_env.get_attr("num_of_goals",indices=0)[0]
+        self.num_of_avoids=self.training_env.get_attr("num_of_avoids",indices=0)[0]
         self.episodes=np.zeros(self.num_envs)
         self.distances_from_goals=[[[] for _ in range (self.num_of_goals)] for _ in range (self.num_envs)]
         self.distances_from_avoids=[[[] for _ in range (self.num_of_avoids)] for _ in range (self.num_envs)]

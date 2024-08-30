@@ -1,6 +1,4 @@
 import os
-import shutil
-import tempfile
 import numpy as np
 import gymnasium as gym
 import pybullet as p
@@ -11,18 +9,12 @@ from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
 
-urdf_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
+from utils.utils import copy_urdf_directory
 
-def copy_urdf_directory(urdf_dir):
-    temp_dir = tempfile.mkdtemp()
-    temp_urdf_dir=os.path.join(temp_dir,os.path.basename(urdf_dir))
-    shutil.copytree(urdf_dir, temp_urdf_dir,dirs_exist_ok=True)
-    print(f"temporary urdf dir is {temp_urdf_dir}",flush=True)
-    return temp_urdf_dir
-
+urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/',num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
+    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)

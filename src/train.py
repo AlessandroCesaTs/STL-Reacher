@@ -1,11 +1,7 @@
 import os
 import time
 import argparse
-import shutil
-import tempfile
-import gymnasium as gym
 from stable_baselines3 import PPO
-from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from classes.trainer import Trainer
@@ -13,34 +9,6 @@ from classes.my_reacher_env import MyReacherEnv
 from utils.utils import get_num_cpus
 
 urdf_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
-
-def copy_urdf_directory(urdf_dir):
-    temp_dir = tempfile.mkdtemp()
-    temp_urdf_dir=os.path.join(temp_dir,os.path.basename(urdf_dir))
-    shutil.copytree(urdf_dir, temp_urdf_dir,dirs_exist_ok=True)
-    print(f"temporary urdf dir is {temp_urdf_dir}")
-    return temp_urdf_dir
-
-
-def make_env(rank, seed=0):
-    """
-    Utility function for multiprocessed env.
-
-    :param env_id: (str) the environment ID
-    :param num_env: (int) the number of environments you wish to have in subprocesses
-    :param seed: (int) the inital seed for RNG
-    :param rank: (int) index of the subprocess
-    """
-    def _init():
-        local_urdf_dir = copy_urdf_directory(urdf_dir)
-
-        env = MyReacherEnv(local_urdf_dir,num_of_goals=3,num_of_avoids=1,output_path=os.getcwd())
-        #env.seed(seed + rank)
-        return env
-    set_random_seed(seed)
-    return _init
-
-
 
 if __name__=="__main__":
     start_time=time.time()
@@ -60,7 +28,6 @@ if __name__=="__main__":
     #n_envs=1
 
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
-    #environment=SubprocVecEnv([make_env(i) for i in range(n_envs)])
     model = PPO("MlpPolicy", environment)
 
     trainer=Trainer(environment,model,output_path)

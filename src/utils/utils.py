@@ -1,5 +1,7 @@
 import os
 import multiprocessing
+import shutil
+import tempfile
 
 def get_num_cpus():
     # Check if running under SLURM
@@ -10,4 +12,11 @@ def get_num_cpus():
         num_cpus = multiprocessing.cpu_count()
     
     return num_cpus
+
+
+def copy_urdf_directory(urdf_dir):
+    temp_dir = tempfile.mkdtemp()
+    temp_urdf_dir=os.path.join(temp_dir,os.path.basename(urdf_dir))
+    shutil.copytree(urdf_dir, temp_urdf_dir,dirs_exist_ok=True)
+    return temp_urdf_dir
 
