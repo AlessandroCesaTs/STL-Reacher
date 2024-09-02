@@ -69,6 +69,16 @@ class MyReacherEnv(gym.Env):
 
         self.goal_to_reach_index=0
 
+        self.set_goals_and_avoids()
+
+        for i in range(self.num_of_goals):
+            self.goal_balls[i].changePos(self.goals[i], 4)
+        for i in range(self.num_of_avoids):
+            self.avoid_balls[i].changePos(self.avoids[i], 4)
+
+        for _ in range(25):
+            self.robot.step()
+
         return observation,reset_info
 
     def _getReward(self):
@@ -154,7 +164,7 @@ class MyReacherEnv(gym.Env):
         self.frames=[]
 
     def _get_obs(self):
-        obs = self.robot.observe()
+        obs = np.concat(self.robot.observe(),self.goals,self.avoids)
         return obs
     
     def close(self):

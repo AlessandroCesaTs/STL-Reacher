@@ -23,12 +23,12 @@ class Trainer:
 
     def train(self,total_timesteps=81920):
         self.environment.reset()
-        start_time=time.time()
+        #start_time=time.time()
         self.model.learn(total_timesteps=total_timesteps,callback=self.callback)
-        print(f"Training Time: {(time.time()-start_time)/60} minutes")
+        #print(f"Training Time: {(time.time()-start_time)/60} minutes")
         self.model.save(self.model_path)
 
-    def test(self,test_steps=200):
+    def test(self,max_test_steps=200):
         test_rewards=[]
         if self.is_vectorized_environment:
             observation,info=self.environment.env_method('reset',indices=0)[0] #env_method returns list
@@ -37,11 +37,15 @@ class Trainer:
         else:
             observation=self.environment.reset()[0]
             self.environment.enable_video_mode()
-        for i in range(test_steps):
+        terminated=False
+        truncated=False
+        test_steps=0
+        while not (terminated or truncated):
             action,_states=self.model.predict(observation)
             observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
             test_rewards.append(reward)
-            if terminated or truncated:
+            test_steps+=1
+            if test_steps>max_test_steps:
                 break
         if self.is_vectorized_environment:
             self.environment.env_method('save_video',indices=0)

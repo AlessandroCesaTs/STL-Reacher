@@ -1,6 +1,7 @@
 import os
 import time
 import argparse
+import csv
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
@@ -27,8 +28,10 @@ if __name__=="__main__":
     n_envs=get_num_cpus()
     #n_envs=1
 
+    times_csv=os.path.join(output_path,'times.csv')
+
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
-    model = PPO("MlpPolicy", environment)
+    model = PPO("MlpPolicy", environment,n_steps=1024,n_epochs=20)
 
     trainer=Trainer(environment,model,output_path)
     
