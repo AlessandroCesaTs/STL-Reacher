@@ -16,7 +16,7 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(12,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
 
         self.num_of_goals=num_of_goals
@@ -164,7 +164,8 @@ class MyReacherEnv(gym.Env):
         self.frames=[]
 
     def _get_obs(self):
-        obs = np.concat(self.robot.observe(),self.goals,self.avoids)
+        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids])
+        #print(f" observation is {obs}")
         return obs
     
     def close(self):
@@ -191,6 +192,7 @@ class MyReacherEnv(gym.Env):
                 avoids.append(avoid)
         self.goals=np.array(goals[:self.num_of_goals])
         self.avoids=np.array(avoids[:self.num_of_avoids])
+        self.flatten_goals_and_avoids=np.concatenate([self.goals.flatten(),self.avoids.flatten()])
     
     def is_valid_position(self,point,other_points):
         for other_point in other_points:
