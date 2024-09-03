@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Read the data from the CSV file
-df = pd.read_csv('output_epyc/times.csv')
+df = pd.read_csv('output_thin/times.csv')
 
 # Calculate the mean time for each number of cores
 mean_times = df.groupby("Cores").median()

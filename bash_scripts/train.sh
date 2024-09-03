@@ -3,7 +3,7 @@
 #SBATCH -o train.out
 #SBATCH -p EPYC
 #SBATCH --nodes=1
-#SBATCH --mem=0
+#SBATCH --mem=64G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
 #SBATCH --hint=nomultithread
@@ -20,7 +20,7 @@ source env/bin/activate
 for i in {0..0}
 do
     echo "Start Training"
-    srun_if_on_slurm python3 -u src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=4096
+    srun_if_on_slurm python3 -u src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=2048000
 done 
 
 echo "Job completed"
