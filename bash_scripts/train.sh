@@ -20,8 +20,7 @@ source env/bin/activate
 for i in {0..0}
 do
     echo "Start Training"
-    srun_if_on_slurm python3 -u src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=2048000
+    srun_if_on_slurm python3 -u src/train.py --num_of_goals=3 --num_of_avoids=1 --total_timesteps=409600
 done 
 
 echo "Job completed"
-

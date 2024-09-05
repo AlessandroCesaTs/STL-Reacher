@@ -9,6 +9,7 @@ from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
 
+
 from utils.utils import copy_urdf_directory
 
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
@@ -100,9 +101,12 @@ class MyReacherEnv(gym.Env):
                 terminated = True 
         else:
             reward=-1*distances_from_goals[self.goal_to_reach_index]
-        info={"Distances from goals":distances_from_goals, "Distances from avoids":distances_from_avoids} 
+        
+        signals=np.concatenate((0.2-distances_from_goals,distances_from_avoids-0.2))
+        info={"Signals":signals} 
 
         return reward, terminated, truncated, info
+        
 
     def _capture_image(self):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0, 0, 0],
@@ -200,3 +204,4 @@ class MyReacherEnv(gym.Env):
                 return False
         return True
 
+    
