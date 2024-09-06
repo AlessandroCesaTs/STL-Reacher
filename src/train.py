@@ -19,18 +19,20 @@ if __name__=="__main__":
     parser.add_argument('--total_timesteps',type=int,default=4096)
     parser.add_argument('--num_of_goals',type=int,default=3)
     parser.add_argument('--num_of_avoids',type=int,default=1)
+    parser.add_argument('--change_goals',type=bool,default=True)
 
     args=parser.parse_args()
     output_path=args.output_path
     total_timesteps=args.total_timesteps
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
+    change_goals=True if args.change_goals=='True' else False
     n_envs=get_num_cpus()
     #n_envs=1
 
-    times_csv=os.path.join(output_path,'times.csv')
+    times_csv_path=os.path.join(output_path,'times.csv')
 
-    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
+    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path,'change_goals':change_goals})
     model = PPO("MlpPolicy", environment,n_steps=1024,n_epochs=20)
 
     trainer=Trainer(environment,model,output_path)
@@ -39,4 +41,8 @@ if __name__=="__main__":
     
     environment.close()
 
-    print(f"Total Time: {(time.time()-start_time)/60} minutes")
+    with open(times_csv_path,mode='a',newline='') as file:
+        writer=csv.writer(file)
+        writer.writerow([n_envs,(time.time()-start_time)/60])
+
+    #print(f"Total Time: {(time.time()-start_time)/60} minutes")

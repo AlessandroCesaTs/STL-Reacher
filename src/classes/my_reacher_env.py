@@ -15,8 +15,9 @@ from utils.utils import copy_urdf_directory
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
+    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd(),change_goals=True):
         super().__init__()
+        self.change_goals=change_goals
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
 
@@ -70,15 +71,16 @@ class MyReacherEnv(gym.Env):
 
         self.goal_to_reach_index=0
 
-        self.set_goals_and_avoids()
+        if self.change_goals:
+            self.set_goals_and_avoids()
 
-        for i in range(self.num_of_goals):
-            self.goal_balls[i].changePos(self.goals[i], 4)
-        for i in range(self.num_of_avoids):
-            self.avoid_balls[i].changePos(self.avoids[i], 4)
+            for i in range(self.num_of_goals):
+                self.goal_balls[i].changePos(self.goals[i], 4)
+            for i in range(self.num_of_avoids):
+                self.avoid_balls[i].changePos(self.avoids[i], 4)
 
-        for _ in range(25):
-            self.robot.step()
+            for _ in range(25):
+                self.robot.step()
 
         return observation,reset_info
 
