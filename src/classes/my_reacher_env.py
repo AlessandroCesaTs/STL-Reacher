@@ -15,11 +15,12 @@ from utils.utils import copy_urdf_directory
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd(),change_goals=True):
+    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd(),change_goals=True,goals_and_avoids_path=None):
         super().__init__()
         self.change_goals=change_goals
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
+        self.output_path=output_path
 
         self.num_of_goals=num_of_goals
         self.num_of_avoids=num_of_avoids
@@ -33,15 +34,18 @@ class MyReacherEnv(gym.Env):
         
         self.min_distance_between_goal_and_avoid=0.02
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
-        self.set_goals_and_avoids()
+        if goals_and_avoids_path is None:
+            self.set_goals_and_avoids()
 
-        for i in range(self.num_of_goals):
-            self.goal_balls[i].changePos(self.goals[i], 4)
-        for i in range(self.num_of_avoids):
-            self.avoid_balls[i].changePos(self.avoids[i], 4)
+            for i in range(self.num_of_goals):
+                self.goal_balls[i].changePos(self.goals[i], 4)
+            for i in range(self.num_of_avoids):
+                self.avoid_balls[i].changePos(self.avoids[i], 4)
 
-        for _ in range(25):
-            self.robot.step()
+            for _ in range(25):
+                self.robot.step()
+        else:
+
 
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
 
@@ -171,7 +175,6 @@ class MyReacherEnv(gym.Env):
 
     def _get_obs(self):
         obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids])
-        #print(f" observation is {obs}")
         return obs
     
     def close(self):
@@ -205,5 +208,9 @@ class MyReacherEnv(gym.Env):
             if np.linalg.norm(point-other_point)<self.min_distance_between_goal_and_avoid:
                 return False
         return True
+    def save_goals_and_avoids(self):
+        os.makedirs(os.path.join(self.output_path,'goals_and_avoids'), exist_ok=True)
+        goals_and_avoids_path=os.path.join(self.output_path,'goals_and_avoids','simulation.avi')
+        np.savez()
 
     
