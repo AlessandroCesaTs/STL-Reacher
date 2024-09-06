@@ -15,6 +15,7 @@ if __name__=="__main__":
     parser.add_argument('--test_steps',type=int,default=100)
     parser.add_argument('--num_of_goals',type=int,default=3)
     parser.add_argument('--num_of_avoids',type=int,default=1)
+    parser.add_argument('--change_goals',type=bool,default=True)
 
     args=parser.parse_args()
     output_path=args.output_path
@@ -22,10 +23,13 @@ if __name__=="__main__":
     test_steps=args.test_steps
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
+    change_goals=True if args.change_goals=='True' else False
     n_envs=get_num_cpus()
     #n_envs=1
 
-    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
+    load_goals_and_avoids=not change_goals
+
+    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path,'load_goals_and_avoids':load_goals_and_avoids})
         
     model=PPO.load(model_path,environment)
 

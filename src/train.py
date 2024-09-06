@@ -33,16 +33,21 @@ if __name__=="__main__":
     times_csv_path=os.path.join(output_path,'times.csv')
 
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path,'change_goals':change_goals})
-    model = PPO("MlpPolicy", environment,n_steps=1024,n_epochs=20)
+    #model = PPO("MlpPolicy", environment,n_steps=1024,n_epochs=5)
+    model = PPO("MlpPolicy", environment)
 
     trainer=Trainer(environment,model,output_path)
     
     trainer.train(total_timesteps=total_timesteps)
+
+    if not change_goals:
+        environment.env_method('save_goals_and_avoids',indices=0)
     
     environment.close()
-
+    """
     with open(times_csv_path,mode='a',newline='') as file:
         writer=csv.writer(file)
         writer.writerow([n_envs,(time.time()-start_time)/60])
+    """
 
-    #print(f"Total Time: {(time.time()-start_time)/60} minutes")
+    print(f"Total Time: {(time.time()-start_time)/60} minutes")
