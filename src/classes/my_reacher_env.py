@@ -177,14 +177,14 @@ class MyReacherEnv(gym.Env):
         avoids=[]
 
         while len(goals)<self.num_of_goals:
-            #goal=self.rhis.samplePoint()
-            goal=self.get_reachable_position()
+            goal=self.rhis.samplePoint()
+            #goal=self.get_reachable_position()
             if self.is_valid_position(goal,avoids):
                 goals.append(goal)
         
         while len(avoids)<self.num_of_avoids:
-            #avoid=self.rhis.samplePoint()
-            avoid=self.get_reachable_position()
+            avoid=self.rhis.samplePoint()
+            #avoid=self.get_reachable_position()
             if self.is_valid_position(avoid,goals):
                 avoids.append(avoid)
         self.goals=np.array(goals[:self.num_of_goals])
@@ -202,7 +202,7 @@ class MyReacherEnv(gym.Env):
         return True
 
     def get_reachable_position(self):
-        for i in range(50):
+        for _ in range(50):
             action=np.random.uniform(-1, 1, 6)
             self.robot.act2(action)
             self.robot.step()
@@ -210,5 +210,19 @@ class MyReacherEnv(gym.Env):
         
         
         return self.get_position_of_end_effector()
+
+    def generate_action_sequence(num_actions, min_distance):
+        actions = []
+        current_position = np.zeros(6)  # Starting at neutral or home position
+        for _ in range(num_actions):
+            action = np.random.uniform(-1, 1, 6)  # Generate random action
+            new_position = current_position + action
+            
+            # Ensure action results in a significant change
+            if np.linalg.norm(action) > min_distance:
+                actions.append(action)
+                current_position = new_position
+        return actions
+
 
     

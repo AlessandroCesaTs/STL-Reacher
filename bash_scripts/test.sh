@@ -19,6 +19,6 @@ source env/bin/activate
 
 echo "Start Testing"
 
-srun_if_on_slurm python3 src/test.py --num_of_goals=3 --num_of_avoids=1 --output_path=${output_path}
+srun_if_on_slurm python3 src/test.py --num_of_goals=1 --output_path=${output_path}
 
 echo "Done Testing"
