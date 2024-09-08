@@ -177,12 +177,14 @@ class MyReacherEnv(gym.Env):
         avoids=[]
 
         while len(goals)<self.num_of_goals:
-            goal=self.rhis.samplePoint()
+            #goal=self.rhis.samplePoint()
+            goal=self.get_reachable_position()
             if self.is_valid_position(goal,avoids):
                 goals.append(goal)
         
         while len(avoids)<self.num_of_avoids:
-            avoid=self.rhis.samplePoint()
+            #avoid=self.rhis.samplePoint()
+            avoid=self.get_reachable_position()
             if self.is_valid_position(avoid,goals):
                 avoids.append(avoid)
         self.goals=np.array(goals[:self.num_of_goals])
@@ -198,5 +200,15 @@ class MyReacherEnv(gym.Env):
             if np.linalg.norm(point-other_point)<self.min_distance_between_goal_and_avoid:
                 return False
         return True
+
+    def get_reachable_position(self):
+        for i in range(50):
+            action=np.random.uniform(-1, 1, 6)
+            self.robot.act2(action)
+            self.robot.step()
+        self.robot.reset()
+        
+        
+        return self.get_position_of_end_effector()
 
     
