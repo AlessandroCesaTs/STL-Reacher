@@ -188,7 +188,7 @@ class MyReacherEnv(gym.Env):
         self.goals=np.array(goals[:self.num_of_goals])
         self.avoids=np.array(avoids[:self.num_of_avoids])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
-        normalized_avoids=np.array([self.rhis.normalize(avoid) for goal in self.avoids])
+        normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
         self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
 
         self.set_and_move_graphic_balls()
