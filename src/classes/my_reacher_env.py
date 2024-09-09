@@ -59,6 +59,7 @@ class MyReacherEnv(gym.Env):
         self.steps=0
         
         self.robot.reset()
+        self.signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
 
         self.set_goals_and_avoids()
 
@@ -87,7 +88,7 @@ class MyReacherEnv(gym.Env):
 
         distances_from_goals=self.distances_from_goals()
         for i in range(self.num_of_goals):
-            self.evaluator.append_signal(i,0.02-distances_from_goals[i])
+            self.evaluator.append_signal(i,self.goal_sphere_radius-distances_from_goals[i])
 
         reward=self.formula_evaluator(0)
 
