@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if command -v sbatch &> /dev/null; then
+source bash_scripts/slurm_utils.sh  #get slurm functions
+
+if i_am_on_slurm; then
     #I'm on slurm
     train_job_id=$(sbatch bash_scripts/train.sh | awk '{print $4}')
     test_job_id=$(sbatch --dependency=afterok:$train_job_id bash_scripts/test.sh | awk '{print $4}')

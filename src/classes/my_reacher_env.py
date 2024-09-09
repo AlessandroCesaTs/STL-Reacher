@@ -8,6 +8,8 @@ from gymnasium import spaces
 from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
+from classes.stl_evaluator import STLEvaluator
+
 
 from utils.utils import copy_urdf_directory
 
@@ -24,7 +26,7 @@ class MyReacherEnv(gym.Env):
         self.num_of_avoids=num_of_avoids
 
         self.urdf_dir=copy_urdf_directory(urdf_dir)
-        time.sleep(5)
+        #time.sleep(5)
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
         self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
@@ -46,6 +48,11 @@ class MyReacherEnv(gym.Env):
         self.video_path=os.path.join(output_path,'videos','simulation.avi')
         self.image_size=(640,480)
         self.fps=5
+
+        self.formula=["F", 0]
+        self.signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
+        self.evaluator=STLEvaluator(self.signals,self.formula) 
+        self.formula_evaluator=self.evaluator.apply_formula()
 
     def reset(self,**kwargs):
         self.episodes+=1
@@ -79,29 +86,20 @@ class MyReacherEnv(gym.Env):
         truncated = False
 
         distances_from_goals=self.distances_from_goals()
+        for i in range(self.num_of_goals):
+            self.evaluator.append_signal(i,0.02-distances_from_goals[i])
 
-        distances_from_avoids=self.distance_from_avoid()
-        
-        if distances_from_avoids<self.goal_sphere_radius:
-            truncated=True
-            reward=-1
-        elif distances_from_goals[self.goal_to_reach_index] < self.goal_sphere_radius:  # this is a bit arbitrary, but works well
-            reward = 1
-            if self.goal_to_reach_index <self.num_of_goals-1:
-                self.goal_to_reach_index+=1
-            else:
-                terminated = True 
+        reward=self.formula_evaluator(0)
+
+        if reward>0:
+            terminated=True
         elif self.steps>self.max_steps:
             truncated=True
-            reward=-1
-        else:
-            reward=-1*distances_from_goals[self.goal_to_reach_index]
         
-        signals=np.concatenate((0.2-distances_from_goals,distances_from_avoids-0.2))
-        info={"Signals":signals} 
+        info={}
 
         return reward, terminated, truncated, info
-        
+
 
     def _capture_image(self):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0, 0, 0],
@@ -177,14 +175,14 @@ class MyReacherEnv(gym.Env):
         avoids=[]
 
         while len(goals)<self.num_of_goals:
-            #goal=self.rhis.samplePoint()
-            goal=self.get_reachable_position()
+            goal=self.rhis.samplePoint()
+            #goal=self.get_reachable_position()
             if self.is_valid_position(goal,avoids):
                 goals.append(goal)
         
         while len(avoids)<self.num_of_avoids:
-            #avoid=self.rhis.samplePoint()
-            avoid=self.get_reachable_position()
+            avoid=self.rhis.samplePoint()
+            #avoid=self.get_reachable_position()
             if self.is_valid_position(avoid,goals):
                 avoids.append(avoid)
         self.goals=np.array(goals[:self.num_of_goals])

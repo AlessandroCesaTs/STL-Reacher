@@ -12,7 +12,7 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument('--output_path',type=str,default=os.getcwd())
     parser.add_argument('--model_path',type=str,default=os.path.join(os.getcwd(),'models','model.zip'))
-    parser.add_argument('--test_steps',type=int,default=100)
+    parser.add_argument('--test_steps',type=int,default=10)
     parser.add_argument('--num_of_goals',type=int,default=3)
     parser.add_argument('--num_of_avoids',type=int,default=1)
 
