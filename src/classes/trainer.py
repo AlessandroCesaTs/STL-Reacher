@@ -29,7 +29,8 @@ class Trainer:
         self.model.save(self.model_path)
 
     def test(self,max_test_steps=200):
-        formula=["and",["F", ["and", 0, ["F", ["and", 1, ["F", 2]]]]],3]
+        #formula=["and",["F", ["and", 0, ["F", ["and", 1, ["F", 2]]]]],3]
+        formula=["and",["F", 0],1]
         num_of_signals=self.environment.get_attr("num_of_goals",indices=0)[0]+self.environment.get_attr("num_of_avoids",indices=0)[0]
         signals=[[] for _ in range (num_of_signals)]
         evaluator=STLEvaluator(signals,formula)

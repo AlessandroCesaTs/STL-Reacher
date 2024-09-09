@@ -15,8 +15,8 @@ class MyCallback(BaseCallback):
         self.mean_rewards=[]
         self.mean_robustnesses=[]
         self.tot_episodes=0
-        self.formula=["and",["F", ["and", 0, ["F", ["and", 1, ["F", 2]]]]],["G",3]]
-        
+        #self.formula=["and",["F", ["and", 0, ["F", ["and", 1, ["F", 2]]]]],["G",3]]
+        self.formula=["and",["F", 0],1]
         with open(self.rewards_path,mode='w',newline='') as file:
             writer=csv.writer(file)
             writer.writerow(['Episode','Mean Reward'])

@@ -14,7 +14,7 @@ from utils.utils import copy_urdf_directory
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=1024,visual=False,output_path=os.getcwd()):
+    def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=500,visual=False,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
@@ -30,7 +30,7 @@ class MyReacherEnv(gym.Env):
         self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
         self.avoid_balls=[Ball(self.urdf_dir,color="red") for _ in range(self.num_of_avoids)]
         
-        self.min_distance_between_goal_and_avoid=0.02
+        self.min_distance=0.1
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
@@ -91,6 +91,9 @@ class MyReacherEnv(gym.Env):
                 self.goal_to_reach_index+=1
             else:
                 terminated = True 
+        elif self.steps>self.max_steps:
+            truncated=True
+            reward=-1
         else:
             reward=-1*distances_from_goals[self.goal_to_reach_index]
         
@@ -142,10 +145,7 @@ class MyReacherEnv(gym.Env):
         obs = self._get_obs()
 
         self.steps+=1
-
-        if not truncated:
-            truncated=self.steps>self.max_steps
-
+        
         if self.video_mode:
             image=self._capture_image()
             self.frames.append(image)
@@ -177,14 +177,14 @@ class MyReacherEnv(gym.Env):
         avoids=[]
 
         while len(goals)<self.num_of_goals:
-            goal=self.rhis.samplePoint()
-            #goal=self.get_reachable_position()
+            #goal=self.rhis.samplePoint()
+            goal=self.get_reachable_position()
             if self.is_valid_position(goal,avoids):
                 goals.append(goal)
         
         while len(avoids)<self.num_of_avoids:
-            avoid=self.rhis.samplePoint()
-            #avoid=self.get_reachable_position()
+            #avoid=self.rhis.samplePoint()
+            avoid=self.get_reachable_position()
             if self.is_valid_position(avoid,goals):
                 avoids.append(avoid)
         self.goals=np.array(goals[:self.num_of_goals])
@@ -196,33 +196,26 @@ class MyReacherEnv(gym.Env):
         self.set_and_move_graphic_balls()
 
     def is_valid_position(self,point,other_points):
-        for other_point in other_points:
-            if np.linalg.norm(point-other_point)<self.min_distance_between_goal_and_avoid:
-                return False
+        if np.linalg.norm(point-self.get_position_of_end_effector())<self.min_distance:
+            return False
+        else:
+            for other_point in other_points:
+                if np.linalg.norm(point-other_point)<self.min_distance:
+                    return False
         return True
 
     def get_reachable_position(self):
         for _ in range(50):
-            action=np.random.uniform(-1, 1, 6)
-            self.robot.act2(action)
-            self.robot.step()
+            action=np.random.beta(0.5, 0.5, 6) * 2 - 1
+            num_steps = np.random.randint(5, 15)  # Randomize number of consecutive steps
+
+            for _ in range(num_steps):
+                self.robot.act2(action)
+                self.robot.step()
+        pos=self.get_position_of_end_effector()
         self.robot.reset()
         
-        
-        return self.get_position_of_end_effector()
-
-    def generate_action_sequence(num_actions, min_distance):
-        actions = []
-        current_position = np.zeros(6)  # Starting at neutral or home position
-        for _ in range(num_actions):
-            action = np.random.uniform(-1, 1, 6)  # Generate random action
-            new_position = current_position + action
-            
-            # Ensure action results in a significant change
-            if np.linalg.norm(action) > min_distance:
-                actions.append(action)
-                current_position = new_position
-        return actions
-
+        return pos
+  
 
     
