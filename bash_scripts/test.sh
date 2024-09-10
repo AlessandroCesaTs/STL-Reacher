@@ -20,7 +20,7 @@ if i_am_on_slurm; then
     test_steps=100
     test_runs=5
 else
-    test_steps=5
+    test_steps=10
     test_runs=1
 fi
 

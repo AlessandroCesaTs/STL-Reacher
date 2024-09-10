@@ -2,7 +2,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 from stable_baselines3.common.vec_env import VecEnv
-from classes.mean_reward_callback import MyCallback
+from classes.my_callback import MyCallback
 from classes.stl_evaluator import STLEvaluator
 
 class Trainer:

@@ -10,7 +10,9 @@ class MyCallback(BaseCallback):
         super().__init__()
         self.rewards_path=rewards_path
         self.rewards_plot_path=os.path.join(plots_path,'rewards.png')
+        self.bools_plot_path=os.path.join(plots_path,'bools.png')
         self.mean_rewards=[]
+        self.bool_terminations=[]
         self.tot_episodes=0
         with open(self.rewards_path,mode='w',newline='') as file:
             writer=csv.writer(file)
@@ -28,13 +30,13 @@ class MyCallback(BaseCallback):
         self.episodes=np.zeros(self.num_envs)
 
     def _on_step(self):
-        self.current_rewards+=self.locals['rewards'][0]
+        self.current_rewards+=self.locals['rewards']
         self.current_lengths += 1
-        for env_index in range(self.num_envs):
-                        
+        for env_index in range(self.num_envs):                        
             if self.locals['dones'][env_index]:
                 mean_reward = self.current_rewards[env_index]/self.current_lengths[env_index]
                 self.mean_rewards.append(mean_reward)
+                self.bool_terminations.append(self.local["rewards"][env_index]>0)
                 with open(self.rewards_path,mode='a',newline='') as file:
                     writer=csv.writer(file)
                     writer.writerow([self.tot_episodes,mean_reward])
@@ -50,4 +52,10 @@ class MyCallback(BaseCallback):
         plt.xlabel("Episode")
         plt.ylabel("Mean Reward")
         plt.savefig(self.rewards_plot_path)
+        plt.close()
+
+        plt.plot(self.bool_terminations)
+        plt.xlabel("Episode")
+        plt.ylabel("Boolean termination")
+        plt.savefig(self.bools_plot_path)
         plt.close()

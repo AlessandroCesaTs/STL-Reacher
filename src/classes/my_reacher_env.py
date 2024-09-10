@@ -40,6 +40,8 @@ class MyReacherEnv(gym.Env):
         self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
         self.avoid_balls=[Ball(self.urdf_dir,color="red") for _ in range(self.num_of_avoids)]
         
+        self.set_and_move_graphic_balls()
+        
         self.min_distance=0.1
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
@@ -100,11 +102,7 @@ class MyReacherEnv(gym.Env):
             self.evaluator.append_single_signal(i,self.goal_sphere_radius-distances_from_goals[i])
 
         reward=self.formula_evaluator(0)
-        print(f"position is {self.get_position_of_end_effector}")
-        print(f"goal is {self.goals}")
-        print(f"signal is {self.evaluator.signals[-1]}")
-        print(f"reward is {reward}")
-
+        
         if reward>0:
             terminated=True
         elif self.steps>self.max_steps:
