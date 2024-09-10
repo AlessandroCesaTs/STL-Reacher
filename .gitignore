@@ -2,7 +2,10 @@
 *.out
 
 #bash script to download video
-bash_scripts/get_videos.sh
+bash_scripts/download_results.sh
+
+#folder with doenloaded results
+downloaded_results*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
