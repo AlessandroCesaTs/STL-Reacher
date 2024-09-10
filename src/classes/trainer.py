@@ -26,7 +26,7 @@ class Trainer:
         self.model.learn(total_timesteps=total_timesteps,callback=self.callback,progress_bar=True)
         self.model.save(self.model_path)
 
-    def test(self,max_test_steps=200,test_runs=1):
+    def test(self,test_runs=1):
         for i in range(test_runs):
             if i==test_runs-1:
                 self.environment.env_method("enable_video_mode",indices=0) if self.is_vectorized_environment else self.environment.enable_video_mode()
@@ -40,8 +40,6 @@ class Trainer:
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
                 test_rewards.append(reward)
                 test_steps+=1
-                if test_steps>max_test_steps:
-                    break
             if i==test_runs-1:
                 if self.is_vectorized_environment:
                     print("saving video")

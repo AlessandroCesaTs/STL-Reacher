@@ -36,7 +36,7 @@ class MyCallback(BaseCallback):
             if self.locals['dones'][env_index]:
                 mean_reward = self.current_rewards[env_index]/self.current_lengths[env_index]
                 self.mean_rewards.append(mean_reward)
-                self.bool_terminations.append(self.local["rewards"][env_index]>0)
+                self.bool_terminations.append(self.locals["rewards"][env_index]>0)
                 with open(self.rewards_path,mode='a',newline='') as file:
                     writer=csv.writer(file)
                     writer.writerow([self.tot_episodes,mean_reward])

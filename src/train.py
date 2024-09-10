@@ -18,14 +18,16 @@ if __name__=="__main__":
     parser.add_argument('--output_path',type=str,default=os.getcwd())
     parser.add_argument('--total_timesteps',type=int,default=256)
     parser.add_argument('--n_steps',type=int,default=128)
+    parser.add_argument('--max_steps',type=int,default=100)
     parser.add_argument('--n_epochs',type=int,default=2)
-    parser.add_argument('--num_of_goals',type=int,default=3)
-    parser.add_argument('--num_of_avoids',type=int,default=1)
+    parser.add_argument('--num_of_goals',type=int,default=1)
+    parser.add_argument('--num_of_avoids',type=int,default=0)
 
     args=parser.parse_args()
     output_path=args.output_path
     total_timesteps=args.total_timesteps
     n_steps=args.n_steps
+    max_steps=args.max_steps
     n_epochs=args.n_epochs
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
@@ -33,7 +35,7 @@ if __name__=="__main__":
 
     times_csv_path=os.path.join(output_path,'times.csv')
 
-    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'output_path':output_path})
+    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'num_of_goals':num_of_goals,'num_of_avoids':num_of_avoids,'max_steps':max_steps,'output_path':output_path})
     model = PPO("MlpPolicy", environment,n_steps=n_steps,n_epochs=n_epochs)
 
     trainer=Trainer(environment,model,output_path)
