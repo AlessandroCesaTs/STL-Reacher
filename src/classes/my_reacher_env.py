@@ -26,7 +26,15 @@ class MyReacherEnv(gym.Env):
         self.num_of_avoids=num_of_avoids
 
         self.urdf_dir=copy_urdf_directory(urdf_dir)
-        #time.sleep(5)
+        self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
+
+
+        self.goals=np.array(np.array([[-0.04059514,  0.22803779,  0.07780317]]))
+        self.avoids=np.array(np.array([]))
+        normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
+        #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
+        #self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
+        self.flatten_goals_and_avoids=normalized_goals.flatten()
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
         self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
@@ -61,7 +69,7 @@ class MyReacherEnv(gym.Env):
         self.robot.reset()
         self.signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
 
-        self.set_goals_and_avoids()
+        #self.set_goals_and_avoids()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline

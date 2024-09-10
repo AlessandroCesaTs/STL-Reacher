@@ -22,13 +22,12 @@ else
     test_steps=5
 fi
 
-
 source bash_scripts/slurm_utils.sh  #source srun_if_on_slurm wich returns srun if i'm on a slurm environment
 
 source env/bin/activate
 
 echo "Start Testing"
 
-srun_if_on_slurm python3 src/test.py --num_of_goals=1 --test_steps=${test_steps} --output_path=${output_path}
+srun_if_on_slurm python3 src/test.py --num_of_goals=1 --num_of_avoids=0 --test_steps=${test_steps} --output_path=${output_path}
 
 echo "Done Testing"
