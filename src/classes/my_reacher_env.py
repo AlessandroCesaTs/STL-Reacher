@@ -29,8 +29,8 @@ class MyReacherEnv(gym.Env):
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
 
-        self.goals=np.array(np.array([[-0.04059514,  0.22803779,  0.07780317]]))
-        self.avoids=np.array(np.array([]))
+        self.goals=np.array([[0.03325928, 0.05016471, 0.16669361],[ 0.15904594, -0.00376019,  0.13412063]])
+        self.avoids=np.array([])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
         #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
         #self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
@@ -59,7 +59,7 @@ class MyReacherEnv(gym.Env):
         self.image_size=(640,480)
         self.fps=5
 
-        stl_formula=["F", 0]
+        stl_formula=["F",["and",0,["F",1]]]
         signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
         self.evaluator=STLEvaluator(signals,stl_formula) 
         self.formula_evaluator=self.evaluator.apply_formula()
@@ -102,7 +102,7 @@ class MyReacherEnv(gym.Env):
             self.evaluator.append_single_signal(i,self.goal_sphere_radius-distances_from_goals[i])
 
         reward=self.formula_evaluator(0)
-        
+
         if reward>0:
             terminated=True
         elif self.steps>self.max_steps:

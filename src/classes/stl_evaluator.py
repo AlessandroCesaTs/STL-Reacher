@@ -147,12 +147,12 @@ print(nested_formula(0))
 
 
 # Example usage
-x = [-1, 0, 1, 2, 3, 4, 5]
-y = [-2, -1, 0, 1, 2, 3, 4]
+x = [-1, 0, 1, -2, -3, -4, -5]
+y = [-2, -1, 0, 1, -2, -3, -4]
 z = [-3, -2, -1, 0, 1, 2, 3]
 signals = [x, y, z]
 
-formula = ["F", ["and", 2, ["F", ["and", 1, ["F", 0]]]]]
+formula = ["F", ["and", 0, ["F", ["and", 1, ["F", 2]]]]]
 
 # Initialize the STL Evaluator
 evaluator = STLEvaluator(signals, formula)
@@ -166,9 +166,11 @@ start=time.time()
 print(nested_formula(0)) 
 print(f"time: {time.time()-start}")
 # Extend the signals
-evaluator.append_signal(0, 6)
-evaluator.append_signal(1, 5)
-evaluator.append_signal(2, 4)
+evaluator.append_single_signal(0, 6)
+evaluator.append_single_signal(1, 5)
+evaluator.append_single_signal(2, 4)
+
+
 
 # Re-evaluate with the extended signals
 start=time.time()
