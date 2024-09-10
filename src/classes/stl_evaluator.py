@@ -108,7 +108,7 @@ class STLEvaluator:
             # If the formula is an operator, we must get the signal index of the subformula
             return self.get_signal_index(formula[1])
 
-    def append_signal(self, signal_index, new_value):
+    def append_single_signal(self, signal_index, new_value):
         """
         Extend a specific signal with new data.
         
@@ -117,7 +117,35 @@ class STLEvaluator:
         """
         self.signals[signal_index].append(new_value)
 
+    def append_signals(self,new_values):
+        for i in  range(len(self.signals)):
+            self.signals[i].append(new_values[i])
+
+    
+    def reset_signals(self):
+        self.signals=[[] for _ in range (len(self.signals))]
+        self.prev_results={}
+
 """
+x=[-1]
+signals=[x]
+formula=["F",0]
+evaluator = STLEvaluator(signals, formula)
+
+# Apply the formula to get the nested function
+nested_formula = evaluator.apply_formula()
+print(nested_formula(0))
+
+evaluator.append_single_signal(0,1)
+print(nested_formula(0))
+
+evaluator.reset_signals()
+nested_formula = evaluator.apply_formula()
+evaluator.append_single_signal(0,-2)
+print(nested_formula(0))
+
+
+
 # Example usage
 x = [-1, 0, 1, 2, 3, 4, 5]
 y = [-2, -1, 0, 1, 2, 3, 4]

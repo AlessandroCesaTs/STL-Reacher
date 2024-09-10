@@ -57,9 +57,9 @@ class MyReacherEnv(gym.Env):
         self.image_size=(640,480)
         self.fps=5
 
-        self.formula=["F", 0]
-        self.signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
-        self.evaluator=STLEvaluator(self.signals,self.formula) 
+        stl_formula=["F", 0]
+        signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
+        self.evaluator=STLEvaluator(signals,stl_formula) 
         self.formula_evaluator=self.evaluator.apply_formula()
 
     def reset(self,**kwargs):
@@ -67,7 +67,8 @@ class MyReacherEnv(gym.Env):
         self.steps=0
         
         self.robot.reset()
-        self.signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
+        self.evaluator.reset_signals()
+        self.formula_evaluator=self.evaluator.apply_formula()
 
         #self.set_goals_and_avoids()
 
@@ -96,9 +97,13 @@ class MyReacherEnv(gym.Env):
 
         distances_from_goals=self.distances_from_goals()
         for i in range(self.num_of_goals):
-            self.evaluator.append_signal(i,self.goal_sphere_radius-distances_from_goals[i])
+            self.evaluator.append_single_signal(i,self.goal_sphere_radius-distances_from_goals[i])
 
         reward=self.formula_evaluator(0)
+        print(f"position is {self.get_position_of_end_effector}")
+        print(f"goal is {self.goals}")
+        print(f"signal is {self.evaluator.signals[-1]}")
+        print(f"reward is {reward}")
 
         if reward>0:
             terminated=True
