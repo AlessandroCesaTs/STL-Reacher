@@ -38,7 +38,7 @@ class MyReacherEnv(gym.Env):
         self.goal_to_reach=0
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
-        self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
+        self.goal_balls=[Ball(self.urdf_dir,color="green"),Ball(self.urdf_dir,color="blue")]
         self.avoid_balls=[Ball(self.urdf_dir,color="red") for _ in range(self.num_of_avoids)]
         
         self.set_and_move_graphic_balls()
