@@ -34,9 +34,9 @@ class MyCallback(BaseCallback):
 
     def _on_step(self):
         self.current_rewards+=self.locals['rewards']
-        self.current_robustnesses+=self.locals['infos']['robustnesses']
         self.current_lengths += 1
-        for env_index in range(self.num_envs):                        
+        for env_index in range(self.num_envs):
+            self.current_robustnesses[env_index]+=self.locals['infos'][env_index]['robustnesses']                        
             if self.locals['dones'][env_index]:
                 mean_reward = self.current_rewards[env_index]/self.current_lengths[env_index]
                 mean_robustness=self.current_robustnesses[env_index]/self.current_lengths[env_index]

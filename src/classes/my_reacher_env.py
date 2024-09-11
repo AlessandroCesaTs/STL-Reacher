@@ -78,7 +78,7 @@ class MyReacherEnv(gym.Env):
 
         for i in range(len(self.stl_formulas)):
             self.stl_evaluators[i].reset_signals()
-            self.stl_formula_evaluators[i]=self.stl_formula_evaluators[i].apply_formula()
+            self.stl_formula_evaluators[i]=self.stl_evaluators[i].apply_formula()
 
         #self.set_goals_and_avoids()
 
@@ -106,7 +106,7 @@ class MyReacherEnv(gym.Env):
         truncated = False
 
         distances_from_goals=self.distances_from_goals()
-        robustnesses=[]
+        robustnesses=np.zeros(len(self.stl_formulas))
         for i in range(len(self.stl_formulas)):
             for j in range(self.num_of_goals):
                 self.stl_evaluators[i].append_single_signal(j,self.goal_sphere_radius-distances_from_goals[j])

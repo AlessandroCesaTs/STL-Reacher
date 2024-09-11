@@ -31,6 +31,7 @@ class Trainer:
             if i==test_runs-1:
                 self.environment.env_method("enable_video_mode",indices=0) if self.is_vectorized_environment else self.environment.enable_video_mode()
             test_rewards=[]
+            test_robustnesses=[[] for _ in range(3)]
             observation,info=self.environment.env_method('reset',indices=0)[0] if self.is_vectorized_environment else self.environment.reset()[0]
             terminated=False
             truncated=False
@@ -39,6 +40,8 @@ class Trainer:
                 action,_states=self.model.predict(observation)
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
                 test_rewards.append(reward)
+                for j in range(len(test_robustnesses)):
+                    test_robustnesses[i].append(info['robustnesses'][j])
                 test_steps+=1
             if i==test_runs-1:
                 if self.is_vectorized_environment:
@@ -50,9 +53,17 @@ class Trainer:
             plt.plot(test_rewards)
             plt.xlabel("Step")
             plt.ylabel("Reward")
-            path=os.path.join(self.plots_path,'test_rewards_'+str(i)+'png')
+            path=os.path.join(self.plots_path,'test_rewards_'+str(i)+'.png')
             plt.savefig(path)
             plt.close()
+
+            for j in range(len(test_robustnesses)):
+                plt.plot(test_robustnesses[i])
+                plt.xlabel("Step")
+                plt.ylabel("Robustness")
+                path=os.path.join(self.plots_path,f"test_robustness_{j}_{i}.png")
+                plt.savefig(path)
+                plt.close()
 
 
 
