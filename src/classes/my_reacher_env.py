@@ -112,8 +112,8 @@ class MyReacherEnv(gym.Env):
                 self.stl_evaluators[i].append_single_signal(j,self.goal_sphere_radius-distances_from_goals[j])
             robustnesses[i]=self.stl_formula_evaluators[i](0)
 
-        
         reward=robustnesses[self.goal_to_reach]
+        #print(f"print robustness are {robustnesses} goal to reach is {self.goal_to_reach} reward is {reward}")
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:

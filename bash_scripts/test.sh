@@ -17,7 +17,7 @@ output_path=${1:-$(pwd)}
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
 if i_am_on_slurm; then
-    max_steps=100
+    max_steps=1000
     test_runs=5
 else
     max_steps=10

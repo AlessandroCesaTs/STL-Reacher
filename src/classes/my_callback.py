@@ -43,7 +43,7 @@ class MyCallback(BaseCallback):
                 self.mean_rewards.append(mean_reward)
                 for i in range(len(mean_robustness)):
                     self.mean_robustnesses[i].append(mean_robustness[i])
-                self.bool_terminations.append(self.locals["rewards"][env_index]>0)
+                self.bool_terminations.append(self.locals['infos'][env_index]['robustnesses'][-1]>0)
                 with open(self.rewards_path,mode='a',newline='') as file:
                     writer=csv.writer(file)
                     writer.writerow([self.tot_episodes,mean_reward])

@@ -41,7 +41,7 @@ class Trainer:
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
                 test_rewards.append(reward)
                 for j in range(len(test_robustnesses)):
-                    test_robustnesses[i].append(info['robustnesses'][j])
+                    test_robustnesses[j].append(info['robustnesses'][j])
                 test_steps+=1
             if i==test_runs-1:
                 if self.is_vectorized_environment:
@@ -58,7 +58,7 @@ class Trainer:
             plt.close()
 
             for j in range(len(test_robustnesses)):
-                plt.plot(test_robustnesses[i])
+                plt.plot(test_robustnesses[j])
                 plt.xlabel("Step")
                 plt.ylabel("Robustness")
                 path=os.path.join(self.plots_path,f"test_robustness_{j}_{i}.png")
