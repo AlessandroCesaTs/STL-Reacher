@@ -35,6 +35,7 @@ class MyReacherEnv(gym.Env):
         #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
         #self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
         self.flatten_goals_and_avoids=normalized_goals.flatten()
+        self.goal_to_reach=0
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
         self.goal_balls=[Ball(self.urdf_dir,color="green") for _ in range(self.num_of_goals)]
@@ -59,18 +60,25 @@ class MyReacherEnv(gym.Env):
         self.image_size=(640,480)
         self.fps=5
 
-        stl_formula=["F",["and",0,["F",1]]]
         signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
-        self.evaluator=STLEvaluator(signals,stl_formula) 
-        self.formula_evaluator=self.evaluator.apply_formula()
+
+        self.stl_formulas=[["F",0],["F",1],["F",["and",0,["F",1]]]]
+        self.stl_evaluators=[]
+        self.stl_formula_evaluators=[]
+        for i in range(len(self.stl_formulas)):
+            self.stl_evaluators.append(STLEvaluator(signals,self.stl_formulas[i]) )
+            self.stl_formula_evaluators.append(self.stl_evaluators[i].apply_formula())
+
 
     def reset(self,**kwargs):
         self.episodes+=1
         self.steps=0
         
         self.robot.reset()
-        self.evaluator.reset_signals()
-        self.formula_evaluator=self.evaluator.apply_formula()
+
+        for i in range(len(self.stl_formulas)):
+            self.stl_evaluators[i].reset_signals()
+            self.stl_formula_evaluators[i]=self.stl_formula_evaluators[i].apply_formula()
 
         #self.set_goals_and_avoids()
 
@@ -98,17 +106,24 @@ class MyReacherEnv(gym.Env):
         truncated = False
 
         distances_from_goals=self.distances_from_goals()
-        for i in range(self.num_of_goals):
-            self.evaluator.append_single_signal(i,self.goal_sphere_radius-distances_from_goals[i])
+        robustnesses=[]
+        for i in range(len(self.stl_formulas)):
+            for j in range(self.num_of_goals):
+                self.stl_evaluators[i].append_single_signal(j,self.goal_sphere_radius-distances_from_goals[j])
+            robustnesses[i]=self.stl_formula_evaluators[i](0)
 
-        reward=self.formula_evaluator(0)
+        
+        reward=robustnesses[self.goal_to_reach]
 
         if reward>0:
-            terminated=True
+            if self.goal_to_reach<self.num_of_goals-1:
+                self.goal_to_reach+=1
+            else:
+                terminated=True
         elif self.steps>self.max_steps:
             truncated=True
         
-        info={}
+        info={'robustnesses':robustnesses}
 
         return reward, terminated, truncated, info
 
