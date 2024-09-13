@@ -17,7 +17,7 @@ num_of_iters=${2:-1}
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
 if i_am_on_slurm; then
-    total_timesteps=40960
+    total_timesteps=2048000
     n_steps=2048
     n_epochs=10
     max_steps=1000

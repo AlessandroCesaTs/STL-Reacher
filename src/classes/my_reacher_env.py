@@ -29,7 +29,7 @@ class MyReacherEnv(gym.Env):
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
 
-        self.goals=np.array([[0.03325928, 0.05016471, 0.16669361],[ 0.15904594, -0.00376019,  0.13412063]])
+        self.goals=np.array([[-0.11357091,  0.0468519,   0.13342413],[0.10271453, 0.1524425,  0.17026361]])
         self.avoids=np.array([])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
         #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
@@ -101,6 +101,24 @@ class MyReacherEnv(gym.Env):
         for _ in range(25):
             self.robot.step()
 
+    def step(self, action):
+        action=np.array(action)
+
+        self.robot.act2(action)
+        self.robot.step()
+
+        reward, terminated, truncated, info = self._getReward()
+
+        obs = self._get_obs()
+
+        self.steps+=1
+        
+        if self.video_mode:
+            image=self._capture_image()
+            self.frames.append(image)
+        
+        return obs,reward,terminated,truncated,info
+
     def _getReward(self):
         terminated=False
         truncated = False
@@ -108,12 +126,10 @@ class MyReacherEnv(gym.Env):
         distances_from_goals=self.distances_from_goals()
         robustnesses=np.zeros(len(self.stl_formulas))
         for i in range(len(self.stl_formulas)):
-            for j in range(self.num_of_goals):
-                self.stl_evaluators[i].append_single_signal(j,self.goal_sphere_radius-distances_from_goals[j])
+            self.stl_evaluators[i].append_signals(self.goal_sphere_radius-distances_from_goals)
             robustnesses[i]=self.stl_formula_evaluators[i](0)
 
         reward=robustnesses[self.goal_to_reach]
-        #print(f"print robustness are {robustnesses} goal to reach is {self.goal_to_reach} reward is {reward}")
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
@@ -159,23 +175,6 @@ class MyReacherEnv(gym.Env):
             out.release()
         
 
-    def step(self, action):
-        action=np.array(action)
-
-        self.robot.act2(action)
-        self.robot.step()
-
-        reward, terminated, truncated, info = self._getReward()
-
-        obs = self._get_obs()
-
-        self.steps+=1
-        
-        if self.video_mode:
-            image=self._capture_image()
-            self.frames.append(image)
-        
-        return obs,reward,terminated,truncated,info
 
     def enable_video_mode(self):
         self.video_mode=True
