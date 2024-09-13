@@ -3,7 +3,6 @@ import numpy as np
 import gymnasium as gym
 import pybullet as p
 import cv2
-import time
 from gymnasium import spaces
 from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
@@ -24,10 +23,10 @@ class MyReacherEnv(gym.Env):
 
         self.num_of_goals=num_of_goals
         self.num_of_avoids=num_of_avoids
+        self.num_of_signals=self.num_of_goals+self.num_of_avoids
 
         self.urdf_dir=copy_urdf_directory(urdf_dir)
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
-
 
         self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
         self.avoids=np.array([])
@@ -49,23 +48,19 @@ class MyReacherEnv(gym.Env):
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
 
         self.steps=0
-        self.start_computing_robustness_from=np.zeros(self.num_of_goals+self.num_of_avoids)
+        self.start_computing_robustness_from=0
         self.max_steps=max_steps  
         self.episodes=0
 
         self.video_mode=False
-        self.frames=[]
-        os.makedirs(os.path.join(output_path,'videos'), exist_ok=True)
-        self.video_path=os.path.join(output_path,'videos','simulation.avi')
-        self.image_size=(640,480)
-        self.fps=5
 
-        signals=[[] for _ in range (self.num_of_goals+self.num_of_avoids)]
+        signals=[[] for _ in range (self.num_of_signals)]
 
         self.stl_formulas=[["F",0],["F",1],["F",["and",0,["F",1]]]]
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
-        for i in range(len(self.stl_formulas)):
+        self.number_of_formulas=len(self.stl_formulas)
+        for i in range(self.number_of_formulas):
             self.stl_evaluators.append(STLEvaluator(signals,self.stl_formulas[i]) )
             self.stl_formula_evaluators.append(self.stl_evaluators[i].apply_formula())
 
@@ -74,11 +69,11 @@ class MyReacherEnv(gym.Env):
         self.episodes+=1
         self.steps=0
         self.goal_to_reach=0
-        self.start_computing_robustness_from.fill(0)
+        self.start_computing_robustness_from=0
         
         self.robot.reset()
 
-        for i in range(len(self.stl_formulas)):
+        for i in range(self.number_of_formulas):
             self.stl_evaluators[i].reset_signals()
             self.stl_formula_evaluators[i]=self.stl_evaluators[i].apply_formula()
 
@@ -125,18 +120,11 @@ class MyReacherEnv(gym.Env):
         truncated = False
 
         distances_from_goals=self.distances_from_goals()
-        #print(f"Distances from goals are {distances_from_goals}")
-        robustnesses=np.zeros(len(self.stl_formulas))
         signals=self.goal_sphere_radius-distances_from_goals
-        #print(f"Signals are {signals}")
-        for i in range(len(self.stl_formulas)):
+        for i in range(self.number_of_formulas):
             self.stl_evaluators[i].append_signals(signals)
-            robustnesses[i]=self.stl_formula_evaluators[i](self.start_computing_robustness_from[i])
-
-        #print(f"robustnesses are {robustnesses}")
-        #print(f"Goal to reach is {self.goal_to_reach}")
-        reward=robustnesses[self.goal_to_reach]
-        #print(f"reward is {reward}\n")
+        
+        reward=self.stl_formula_evaluators[self.goal_to_reach](self.start_computing_robustness_from)
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
@@ -149,10 +137,15 @@ class MyReacherEnv(gym.Env):
             #print(f"Episode truncated")
             truncated=True
         
-        info={'robustnesses':robustnesses}
+        info={'episode':self.episodes,'step':self.steps,'goal_to_reach':self.goal_to_reach}
+        
+        if terminated or truncated:
+            final_robustness=self.stl_formula_evaluators[-1]
+            final_boolean=int(final_robustness>0)
+            info['final_robustness']=final_robustness
+            info['final_boolean']=final_boolean
 
         return reward, terminated, truncated, info
-
 
     def _capture_image(self):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0, 0, 0],
@@ -177,9 +170,10 @@ class MyReacherEnv(gym.Env):
         image_array = image_array.astype(np.uint8) #convert to correct type for CV2
         return image_array 
 
-    def save_video(self):
+    def save_video(self,tag=""):
         if self.frames:
-            out=cv2.VideoWriter(self.video_path,cv2.VideoWriter_fourcc(*'XVID'),fps=self.fps,frameSize=self.image_size)
+            path=os.path.join(self.output_path,'videos',f"video{tag}")
+            out=cv2.VideoWriter(path,cv2.VideoWriter_fourcc(*'XVID'),fps=self.fps,frameSize=self.image_size)
             for image in self.frames:
                 out.write(image)
             out.release()
@@ -187,11 +181,14 @@ class MyReacherEnv(gym.Env):
 
 
     def enable_video_mode(self):
+        self.frames=[]
+        os.makedirs(os.path.join(self.output_path,'videos'), exist_ok=True)
+        self.image_size=(640,480)
+        self.fps=5
         self.video_mode=True
 
     def disable_video_mode(self):
         self.video_mode=False
-        self.frames=[]
 
     def _get_obs(self):
         obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids])

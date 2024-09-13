@@ -15,7 +15,7 @@ if __name__=="__main__":
     start_time=time.time()
 
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output_path',type=str,default=os.getcwd())
+    parser.add_argument('--output_path',type=str,default=os.path.join(os.getcwd(),'output'))
     parser.add_argument('--total_timesteps',type=int,default=256)
     parser.add_argument('--n_steps',type=int,default=128)
     parser.add_argument('--max_steps',type=int,default=100)
@@ -32,6 +32,8 @@ if __name__=="__main__":
     num_of_goals=args.num_of_goals
     num_of_avoids=args.num_of_avoids
     n_envs=get_num_cpus()
+
+    os.makedirs(output_path,exists_ok=True)
 
     times_csv_path=os.path.join(output_path,'times.csv')
 

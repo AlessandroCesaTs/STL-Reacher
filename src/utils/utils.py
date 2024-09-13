@@ -1,3 +1,4 @@
+import csv
 import os
 import multiprocessing
 import shutil
@@ -19,4 +20,10 @@ def copy_urdf_directory(urdf_dir):
     temp_urdf_dir=os.path.join(temp_dir,os.path.basename(urdf_dir))
     shutil.copytree(urdf_dir, temp_urdf_dir,dirs_exist_ok=True)
     return temp_urdf_dir
+
+
+def write_to_csv(path,line_to_write,mode):
+    with open(path,mode=mode,newline='') as file:
+        writer=csv.writer(file)
+        writer.writerow(line_to_write)
 
