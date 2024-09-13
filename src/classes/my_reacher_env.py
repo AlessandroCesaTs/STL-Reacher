@@ -29,7 +29,7 @@ class MyReacherEnv(gym.Env):
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
 
-        self.goals=np.array([[-0.11357091,  0.0468519,   0.13342413],[0.10271453, 0.1524425,  0.17026361]])
+        self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
         self.avoids=np.array([])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
         #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
@@ -49,8 +49,8 @@ class MyReacherEnv(gym.Env):
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
 
         self.steps=0
+        self.start_computing_robustness_from=np.zeros(self.num_of_goals+self.num_of_avoids)
         self.max_steps=max_steps  
-        self.goal_to_reach_index=0
         self.episodes=0
 
         self.video_mode=False
@@ -73,6 +73,8 @@ class MyReacherEnv(gym.Env):
     def reset(self,**kwargs):
         self.episodes+=1
         self.steps=0
+        self.goal_to_reach=0
+        self.start_computing_robustness_from.fill(0)
         
         self.robot.reset()
 
@@ -88,7 +90,6 @@ class MyReacherEnv(gym.Env):
         if self.video_mode:
             self.frames=[]
 
-        self.goal_to_reach_index=0
 
         return observation,reset_info
 
@@ -124,19 +125,28 @@ class MyReacherEnv(gym.Env):
         truncated = False
 
         distances_from_goals=self.distances_from_goals()
+        #print(f"Distances from goals are {distances_from_goals}")
         robustnesses=np.zeros(len(self.stl_formulas))
+        signals=self.goal_sphere_radius-distances_from_goals
+        #print(f"Signals are {signals}")
         for i in range(len(self.stl_formulas)):
-            self.stl_evaluators[i].append_signals(self.goal_sphere_radius-distances_from_goals)
-            robustnesses[i]=self.stl_formula_evaluators[i](0)
+            self.stl_evaluators[i].append_signals(signals)
+            robustnesses[i]=self.stl_formula_evaluators[i](self.start_computing_robustness_from[i])
 
+        #print(f"robustnesses are {robustnesses}")
+        #print(f"Goal to reach is {self.goal_to_reach}")
         reward=robustnesses[self.goal_to_reach]
+        #print(f"reward is {reward}\n")
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
                 self.goal_to_reach+=1
+                self.start_computing_robustness_from[self.goal_to_reach]=self.steps
             else:
+                #print(f"Episode terminated")
                 terminated=True
         elif self.steps>self.max_steps:
+            #print(f"Episode truncated")
             truncated=True
         
         info={'robustnesses':robustnesses}
