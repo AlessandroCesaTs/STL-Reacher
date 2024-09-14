@@ -1,93 +1,86 @@
 import os
 import argparse
 import pandas as pd
-import matplotlib.pyplot as plt
 
+from utils.plotting_utils import plot_train_means,plot_final_train_values,plot_final_test_values,plot_test_values
 
-def plot_means(dataframe,plots_path,column):
-
-    num_of_envs=dataframe['Environment'].max()+1
-    dataframe['Total_Episode']=dataframe['Episode']*num_of_envs+dataframe['Environment']
-    dataframe.drop(columns=['Environment'],inplace=True)
-
-    mean_rewards=dataframe.groupby('Episode')[column].mean().reset_index()
-
-    plt.plot(mean_rewards['Episode'],mean_rewards[column])
-    plt.xlabel('Episode')
-    plt.ylabel(f"Mean {column}")
-    plt.title(f"Mean {column} per Episode")
-    plt.savefig(plots_path)
-    plt.close()
-
-if __name__=="main":
+if __name__=="__main__":
     parser=argparse.ArgumentParser()
-    parser.add_argment('--base_path',type=str)
-    parser.add_argment('--num_of_robustnesses',type=str,default=1)
+    parser.add_argument('--base_path',type=str,default=os.path.join(os.getcwd(),'output'))
+    parser.add_argument('--plot_train',action=argparse.BooleanOptionalAction,default=True)
+    parser.add_argument('--plot_test',action=argparse.BooleanOptionalAction,default=True)
+    parser.add_argument('--num_of_robustnesses',type=int,default=1)
+    parser.add_argument('--test_runs',type=int,default=1)
 
     args=parser.parse_args()
     base_path=args.base_path
-    num_of_robustnesses=num_of_robustnesses
+    plot_train=args.plot_train
+    plot_test=args.plot_test
+    num_of_robustnesses=args.num_of_robustnesses
 
-    training_logs_path=os.path.join(base_path,'training','logs')
+    if plot_train:
 
-    training_plots_path=os.path.join(base_path,'training','plots')
-    os.makedirs(training_plots_path,exist_ok=True)
+        train_logs_path=os.path.join(base_path,'train','logs')
 
-    rewards_plot_path=os.path.join(training_plots_path,'mean_rewards.png')
-    rewards_dataframe=pd.read_csv(os.path.join(training_logs_path),'rewards.csv')
+        train_plots_path=os.path.join(base_path,'train','plots')
+        os.makedirs(train_plots_path,exist_ok=True)
 
-    plot_means(rewards_dataframe,'Reward')
+        test_rewards_dataframe=pd.read_csv(os.path.join(train_logs_path,'rewards.csv'))
+        rewards_plot_path=os.path.join(train_plots_path,'rewards.png')
 
-    for robustness_index in range(num_of_robustnesses)
+        plot_train_means(test_rewards_dataframe,rewards_plot_path,'Reward')
 
-def plot_mean_robustnesses(logs_path,plots_path,robustness_index):
-    path=os.path.join(plots_path,f"robustness_{robustness_index}.png")
-    df=pd.read_csv(os.path.join(logs_path),f"robustnesses_{robustness_index}.png")
+        for robustness_index in range(num_of_robustnesses):
+            path=os.path.join(train_plots_path,f"robustness_{robustness_index}.png")
+            dataframe=pd.read_csv(os.path.join(train_logs_path,f"robustness_{robustness_index}.csv"))
+            plot_train_means(dataframe,path,'Robustness')
+        
+        for rob_or_bool in ['robustness','boolean']:
+            plot_final_train_values(train_logs_path,train_plots_path,rob_or_bool)
+
+    if plot_test:
+        test_runs=args.test_runs
+
+        test_logs_path=os.path.join(base_path,'test','logs')
+
+        test_plots_path=os.path.join(base_path,'test','plots')
+        os.makedirs(test_plots_path,exist_ok=True)
+
+        test_rewards_dataframe=pd.read_csv(os.path.join(test_logs_path,'rewards.csv'))
+        test_robustnesses_dataframes=[pd.read_csv(os.path.join(test_logs_path,f"robustness_{robustness_index}.csv")) for robustness_index in range(num_of_robustnesses)]
+        for rob_or_bool in ['robustness','boolean']:
+            plot_final_test_values(test_logs_path,test_plots_path,rob_or_bool)
+
+        for run in range(test_runs):
+            test_run_plots_path=os.path.join(test_plots_path,f"run_{run}")
+            os.makedirs(test_run_plots_path,exist_ok=True)
+            test_run_rewards_plot_path=os.path.join(test_run_plots_path,'rewards.png')
+            plot_test_values(test_rewards_dataframe,test_run_rewards_plot_path,'Reward',run)
+
+            for robustness_index in range(num_of_robustnesses):
+                path=os.path.join(test_run_plots_path,f"robustness_{robustness_index}.png")
+                dataframe=test_robustnesses_dataframes[robustness_index]
+                plot_test_values(dataframe,path,'Robustness',run)
 
 
 
-def plot_mean_rewards(logs_path,plots_path):
-    path=os.path.join(plots_path,'mean_rewards.png')
-    df=pd.read_csv(os.path.join(logs_path),'rewards.csv')
-
-    num_of_envs=df['Environment'].max()+1
-    df['Total_Episode']=df['Episode']*num_of_envs+df['Environment']
-    df.drop(columns=['Environment'],inplace=True)
-
-    mean_rewards=df.groupby('Episode')['Reward'].mean().reset_index()
-
-    plt.plot(mean_rewards['Episode'],mean_rewards['Reward'])
-    plt.xlabel('Episode')
-    plt.ylabel('Mean Reward')
-    plt.title('Mean Reward per Episode')
-    plt.savefig(path)
-    plt.close()
+             
 
 
 
-
-def plot_final_train_values(logs_path,plots_path,rob_or_bool):
-    path=os.path.join(plots_path,f"final_{rob_or_bool}.png")
-    column=rob_or_bool.capitalize()
-    df=pd.read_csv(os.path.join(logs_path,f"final_{rob_or_bool}.csv"))
-
-    num_of_envs=df['Environment'].max()+1
-    df['Total_Episode']=df['Episode']*num_of_envs+df['Environment']
-
-    values=df[column]
-
-    positive_values=df[values>0]
-    negative_values=df[values<=0]
-
-    plt.plot(df['Total_Episode'],positive_values[column],color='green',label="Formula satisfied")
-    plt.plot(df['Total_Episode'],negative_values[column],color='red',label="Formula not satisfied")
-    plt.xlabel("Episode")
-    plt.ylabel(column)
-    plt.legend()
-    plt.title(f"Final {column} per episode")
     
-    plt.savefig(path)
-    plt.close()
+
+
+
+    
+
+
+
+
+
+
+
+
 
 
 

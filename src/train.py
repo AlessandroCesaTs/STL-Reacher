@@ -33,7 +33,7 @@ if __name__=="__main__":
     num_of_avoids=args.num_of_avoids
     n_envs=get_num_cpus()
 
-    os.makedirs(output_path,exists_ok=True)
+    os.makedirs(output_path,exist_ok=True)
 
     times_csv_path=os.path.join(output_path,'times.csv')
 

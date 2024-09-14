@@ -2,7 +2,6 @@
 #SBATCH -J test
 #SBATCH -o test.out
 #SBATCH -p EPYC
-#SBATCH --exclusive
 #SBATCH --nodes=1
 #SBATCH --mem=64G
 #SBATCH --ntasks=1
@@ -12,7 +11,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=${1:-$(pwd)}
+output_path=${1:-$(pwd)/output}
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 

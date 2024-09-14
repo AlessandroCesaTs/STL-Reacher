@@ -60,13 +60,13 @@ class MyReacherEnv(gym.Env):
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
         self.number_of_formulas=len(self.stl_formulas)
+        self.number_of_formulas_to_monitor=self.number_of_formulas-1
         for i in range(self.number_of_formulas):
             self.stl_evaluators.append(STLEvaluator(signals,self.stl_formulas[i]) )
             self.stl_formula_evaluators.append(self.stl_evaluators[i].apply_formula())
 
 
     def reset(self,**kwargs):
-        self.episodes+=1
         self.steps=0
         self.goal_to_reach=0
         self.start_computing_robustness_from=0
@@ -129,21 +129,20 @@ class MyReacherEnv(gym.Env):
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
                 self.goal_to_reach+=1
-                self.start_computing_robustness_from[self.goal_to_reach]=self.steps
+                self.start_computing_robustness_from=self.steps
             else:
-                #print(f"Episode terminated")
                 terminated=True
         elif self.steps>self.max_steps:
-            #print(f"Episode truncated")
             truncated=True
         
-        info={'episode':self.episodes,'step':self.steps,'goal_to_reach':self.goal_to_reach}
+        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':self.goal_to_reach}            
         
         if terminated or truncated:
-            final_robustness=self.stl_formula_evaluators[-1]
+            final_robustness=self.stl_formula_evaluators[-1](0)
             final_boolean=int(final_robustness>0)
             info['final_robustness']=final_robustness
             info['final_boolean']=final_boolean
+            self.episodes+=1
 
         return reward, terminated, truncated, info
 
@@ -170,19 +169,15 @@ class MyReacherEnv(gym.Env):
         image_array = image_array.astype(np.uint8) #convert to correct type for CV2
         return image_array 
 
-    def save_video(self,tag=""):
+    def save_video(self,path):
         if self.frames:
-            path=os.path.join(self.output_path,'videos',f"video{tag}")
             out=cv2.VideoWriter(path,cv2.VideoWriter_fourcc(*'XVID'),fps=self.fps,frameSize=self.image_size)
             for image in self.frames:
                 out.write(image)
-            out.release()
-        
-
+            out.release()      
 
     def enable_video_mode(self):
         self.frames=[]
-        os.makedirs(os.path.join(self.output_path,'videos'), exist_ok=True)
         self.image_size=(640,480)
         self.fps=5
         self.video_mode=True

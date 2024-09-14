@@ -11,7 +11,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=${1:-$(pwd)}
+output_path=${1:-$(pwd)/output}
 num_of_iters=${2:-1}
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
