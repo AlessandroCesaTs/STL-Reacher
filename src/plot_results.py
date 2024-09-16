@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 
-from utils.plotting_utils import plot_train_means,plot_final_train_values,plot_final_test_values,plot_test_values
+from utils.plotting_utils import plot_train_means,plot_test_values,plot_final_train_robustness, plot_final_train_boolean, plot_final_test_robustness, plot_final_test_boolean
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
@@ -35,8 +35,8 @@ if __name__=="__main__":
             dataframe=pd.read_csv(os.path.join(train_logs_path,f"robustness_{robustness_index}.csv"))
             plot_train_means(dataframe,path,'Robustness')
         
-        for rob_or_bool in ['robustness','boolean']:
-            plot_final_train_values(train_logs_path,train_plots_path,rob_or_bool)
+        plot_final_train_robustness(train_logs_path,train_plots_path)
+        plot_final_train_boolean(train_logs_path,train_plots_path)
 
     if plot_test:
         test_runs=args.test_runs
@@ -48,8 +48,9 @@ if __name__=="__main__":
 
         test_rewards_dataframe=pd.read_csv(os.path.join(test_logs_path,'rewards.csv'))
         test_robustnesses_dataframes=[pd.read_csv(os.path.join(test_logs_path,f"robustness_{robustness_index}.csv")) for robustness_index in range(num_of_robustnesses)]
-        for rob_or_bool in ['robustness','boolean']:
-            plot_final_test_values(test_logs_path,test_plots_path,rob_or_bool)
+        
+        plot_final_test_robustness(test_logs_path,test_plots_path)
+        plot_final_test_boolean(test_logs_path,test_plots_path)
 
         for run in range(test_runs):
             test_run_plots_path=os.path.join(test_plots_path,f"run_{run}")

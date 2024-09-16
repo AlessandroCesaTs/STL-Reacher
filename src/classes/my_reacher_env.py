@@ -28,7 +28,8 @@ class MyReacherEnv(gym.Env):
         self.urdf_dir=copy_urdf_directory(urdf_dir)
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
-        self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
+        #self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
+        self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623]])
         self.avoids=np.array([])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
         #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
@@ -56,7 +57,8 @@ class MyReacherEnv(gym.Env):
 
         signals=[[] for _ in range (self.num_of_signals)]
 
-        self.stl_formulas=[["F",0],["F",1],["F",["and",0,["F",1]]]]
+        #self.stl_formulas=[["F",0],["F",1],["F",["and",0,["F",1]]]]
+        self.stl_formulas=[["F",0],["F",0]]
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
         self.number_of_formulas=len(self.stl_formulas)

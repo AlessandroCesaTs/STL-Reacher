@@ -14,9 +14,17 @@ output_path=${1:-$(pwd)/output}
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
+if i_am_on_slurm; then
+    test_runs=5
+else
+    test_runs=1
+fi
+
+
 source env/bin/activate
 
 echo "Start Plotting"
-srun_if_on_slurm python3 src/plot_results.py --num_of_robustnesses=2 --test_runs=1
+
+srun_if_on_slurm python3 src/plot_results.py --num_of_robustnesses=1 --test_runs=${test_runs}
 
 echo "Done Plotting"
