@@ -119,12 +119,13 @@ class MyReacherEnv(gym.Env):
         terminated=False
         truncated = False
 
+        goal_to_reach=self.goal_to_reach
         distances_from_goals=self.distances_from_goals()
         signals=self.goal_sphere_radius-distances_from_goals
         for i in range(self.number_of_formulas):
             self.stl_evaluators[i].append_signals(signals)
         
-        reward=self.stl_formula_evaluators[self.goal_to_reach](self.start_computing_robustness_from)
+        reward=self.stl_formula_evaluators[goal_to_reach](self.start_computing_robustness_from)
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
@@ -135,7 +136,7 @@ class MyReacherEnv(gym.Env):
         elif self.steps>self.max_steps:
             truncated=True
         
-        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':self.goal_to_reach}            
+        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach}            
         
         if terminated or truncated:
             final_robustness=self.stl_formula_evaluators[-1](0)
