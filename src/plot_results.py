@@ -6,23 +6,23 @@ from utils.plotting_utils import plot_train_means,plot_test_values,plot_final_tr
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
-    parser.add_argument('--base_path',type=str,default=os.path.join(os.getcwd(),'output'))
+    parser.add_argument('--output_path',type=str,default=os.path.join(os.getcwd(),'output'))
     parser.add_argument('--plot_train',action=argparse.BooleanOptionalAction,default=True)
     parser.add_argument('--plot_test',action=argparse.BooleanOptionalAction,default=True)
     parser.add_argument('--num_of_robustnesses',type=int,default=1)
     parser.add_argument('--test_runs',type=int,default=1)
 
     args=parser.parse_args()
-    base_path=args.base_path
+    output_path=args.output_path
     plot_train=args.plot_train
     plot_test=args.plot_test
     num_of_robustnesses=args.num_of_robustnesses
 
     if plot_train:
 
-        train_logs_path=os.path.join(base_path,'train','logs')
+        train_logs_path=os.path.join(output_path,'train','logs')
 
-        train_plots_path=os.path.join(base_path,'train','plots')
+        train_plots_path=os.path.join(output_path,'train','plots')
         os.makedirs(train_plots_path,exist_ok=True)
 
         test_rewards_dataframe=pd.read_csv(os.path.join(train_logs_path,'rewards.csv'))
@@ -41,9 +41,9 @@ if __name__=="__main__":
     if plot_test:
         test_runs=args.test_runs
 
-        test_logs_path=os.path.join(base_path,'test','logs')
+        test_logs_path=os.path.join(output_path,'test','logs')
 
-        test_plots_path=os.path.join(base_path,'test','plots')
+        test_plots_path=os.path.join(output_path,'test','plots')
         os.makedirs(test_plots_path,exist_ok=True)
 
         test_rewards_dataframe=pd.read_csv(os.path.join(test_logs_path,'rewards.csv'))

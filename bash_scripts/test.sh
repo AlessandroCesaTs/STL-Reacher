@@ -11,7 +11,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=${1:-$(pwd)/output}
+output_path=$(pwd)/outputs/${1:-output}
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 

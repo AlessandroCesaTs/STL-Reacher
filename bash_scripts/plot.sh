@@ -10,7 +10,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=${1:-$(pwd)/output}
+output_path=$(pwd)/outputs/${1:-output}
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
@@ -25,6 +25,6 @@ source env/bin/activate
 
 echo "Start Plotting"
 
-srun_if_on_slurm python3 src/plot_results.py --num_of_robustnesses=1 --test_runs=${test_runs}
+srun_if_on_slurm python3 src/plot_results.py --num_of_robustnesses=1 --test_runs=${test_runs} --output_path=${output_path}
 
 echo "Done Plotting"
