@@ -17,7 +17,8 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=100,visual=False,output_path=os.getcwd()):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
+        #self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(15,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
@@ -189,7 +190,7 @@ class MyReacherEnv(gym.Env):
         self.video_mode=False
 
     def _get_obs(self):
-        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids])
+        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids[self.goal_to_reach:self.goal_to_reach+3]])
         return obs
     
     def close(self):
