@@ -21,7 +21,7 @@ if __name__=="__main__":
     parser.add_argument('--max_steps',type=int,default=100)
     parser.add_argument('--n_epochs',type=int,default=2)
     parser.add_argument('--num_of_goals',type=int,default=1)
-    parser.add_argument('--num_of_avoids',type=int,default=0)
+    parser.add_argument('--num_of_avoids',type=int,default=1)
 
     args=parser.parse_args()
     output_path=args.output_path

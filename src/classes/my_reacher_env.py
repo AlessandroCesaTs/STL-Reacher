@@ -195,7 +195,10 @@ class MyReacherEnv(gym.Env):
         self.video_mode=False
 
     def _get_obs(self):
-        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids[self.goal_to_reach*3:self.goal_to_reach*3+3],self.flatten_goals_and_avoids[:-self.num_of_avoids*3]])
+        observation=self.robot.observe()
+        goal=self.flatten_goals_and_avoids[self.goal_to_reach*3:self.goal_to_reach*3+3]
+        avoid=self.flatten_goals_and_avoids[-self.num_of_avoids*3:]
+        obs=np.concatenate([observation,goal,avoid])
         return obs
     
     def close(self):
