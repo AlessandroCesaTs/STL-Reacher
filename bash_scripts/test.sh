@@ -29,6 +29,6 @@ source env/bin/activate
 
 echo "Start Testing"
 
-srun_if_on_slurm python3 src/test.py --num_of_goals=1 --num_of_avoids=0 --max_steps=${max_steps} --test_runs=${test_runs} --output_path=${output_path}
+srun_if_on_slurm python3 src/test.py --num_of_goals=2 --num_of_avoids=0 --max_steps=${max_steps} --test_runs=${test_runs} --output_path=${output_path}
 
 echo "Done Testing"

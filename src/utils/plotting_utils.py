@@ -47,7 +47,9 @@ def plot_final_train_boolean(logs_path,plots_path):
     dataframe['Total_Episode']=dataframe['Episode']*num_of_envs+dataframe['Environment']
     values=dataframe['Boolean']
     
-    plt.plot(dataframe['Total_Episode'],values)
+    plt.scatter(dataframe['Total_Episode'][values > 0], values[values > 0], color='green', label="Formula satisfied")
+    plt.scatter(dataframe['Total_Episode'][values <= 0], values[values <= 0], color='red', label="Formula not satisfied")
+
 
     plt.xlabel("Episode")
     plt.ylabel('Boolean')
@@ -63,7 +65,9 @@ def plot_final_test_robustness(logs_path,plots_path):
     values=dataframe['Robustness']
 
 
-    plt.plot(dataframe['Run'],values)
+    plt.scatter(dataframe['Run'][values > 0], values[values > 0], color='green', label="Formula satisfied")
+    plt.scatter(dataframe['Run'][values <= 0], values[values <= 0], color='red', label="Formula not satisfied")
+
 
     plt.xlabel("Run")
     plt.ylabel('Robustness')
