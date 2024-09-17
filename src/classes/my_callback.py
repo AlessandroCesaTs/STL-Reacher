@@ -44,14 +44,12 @@ class MyCallback(BaseCallback):
             step=info['step']
             goal_to_reach=info['goal_to_reach']
             reward=rewards[env_index]
-            #print(f"episode {episode}")
 
             write_to_csv(self.rewards_log_path,[env_index,episode,step,reward],'a')
 
             write_to_csv(self.robustnesses_log_paths[goal_to_reach],[env_index,episode,step,reward],'a')
                     
             if dones[env_index]:
-                #print(f"Done episode {episode}")
                 final_robustness=info['final_robustness']
                 final_boolean=info['final_boolean']
                 write_to_csv(self.final_robustness_log_path,[env_index,episode,final_robustness],'a')

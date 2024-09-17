@@ -29,14 +29,14 @@ class MyReacherEnv(gym.Env):
         self.urdf_dir=copy_urdf_directory(urdf_dir)
         self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
 
-        self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
+        #self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
         #self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623]])
         self.goals=np.array([[0.05790668, 0.00081088, 0.06669921],[0.0482178,  0.00583158, 0.17921456]])
         self.avoids=np.array([[0.05822397, 0.09013274, 0.01486402]])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
-        #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
-        #self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
-        self.flatten_goals_and_avoids=normalized_goals.flatten()
+        normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
+        self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
+        #self.flatten_goals_and_avoids=normalized_goals.flatten()
         self.goal_to_reach=0
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
@@ -60,7 +60,7 @@ class MyReacherEnv(gym.Env):
         signals=[[] for _ in range (self.num_of_signals)]
 
         complete_formula=["and",["F",["and",0,["F",1]]],["G",2]]
-        self.stl_formulas=[["and",["F",0],["G",2]],["and",["F",0],["G",2]],complete_formula]
+        self.stl_formulas=[["and",["F",0],["G",2]],["and",["F",0],["G",2]],["G",2],complete_formula]
         #self.stl_formulas=[["F",0],["F",0]]
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
@@ -141,7 +141,7 @@ class MyReacherEnv(gym.Env):
                 self.start_computing_robustness_from=self.steps
             else:
                 terminated=True
-        elif self.steps>self.max_steps:
+        elif (self.stl_formula_evaluators[-2](0)<0) or self.steps>self.max_steps:
             truncated=True
         
         info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach}            
@@ -195,7 +195,7 @@ class MyReacherEnv(gym.Env):
         self.video_mode=False
 
     def _get_obs(self):
-        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids[self.goal_to_reach:self.goal_to_reach+3],self.flatten_goals_and_avoids[:-self.num_of_avoids*3]])
+        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids[self.goal_to_reach*3:self.goal_to_reach*3+3],self.flatten_goals_and_avoids[:-self.num_of_avoids*3]])
         return obs
     
     def close(self):
