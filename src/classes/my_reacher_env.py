@@ -18,7 +18,7 @@ class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=100,visual=False,output_path=os.getcwd()):
         super().__init__()
         #self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(15,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(15+num_of_avoids*3,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
@@ -31,7 +31,8 @@ class MyReacherEnv(gym.Env):
 
         self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623],[0.02723257, 0.06234151, 0.21561294]])
         #self.goals=np.array([[-0.03265609,  0.17429236,  0.08591623]])
-        self.avoids=np.array([])
+        self.goals=np.array([[0.05790668, 0.00081088, 0.06669921],[0.0482178,  0.00583158, 0.17921456]])
+        self.avoids=np.array([[0.05822397, 0.09013274, 0.01486402]])
         normalized_goals=np.array([self.rhis.normalize(goal) for goal in self.goals])
         #normalized_avoids=np.array([self.rhis.normalize(avoid) for avoid in self.avoids])
         #self.flatten_goals_and_avoids=np.concatenate([normalized_goals.flatten(),normalized_avoids.flatten()])
@@ -58,7 +59,8 @@ class MyReacherEnv(gym.Env):
 
         signals=[[] for _ in range (self.num_of_signals)]
 
-        self.stl_formulas=[["F",0],["F",1],["F",["and",0,["F",1]]]]
+        complete_formula=["and",["F",["and",0,["F",1]]],["G",2]]
+        self.stl_formulas=[["and",["F",0],["G",2]],["and",["F",0],["G",2]],complete_formula]
         #self.stl_formulas=[["F",0],["F",0]]
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
@@ -124,7 +126,10 @@ class MyReacherEnv(gym.Env):
 
         goal_to_reach=self.goal_to_reach
         distances_from_goals=self.distances_from_goals()
-        signals=self.goal_sphere_radius-distances_from_goals
+        distances_from_avoids=self.distances_from_avoids()
+        goal_signals=self.goal_sphere_radius-distances_from_goals
+        avoid_signals=distances_from_avoids-self.goal_sphere_radius
+        signals=np.concatenate([goal_signals,avoid_signals])
         for i in range(self.number_of_formulas):
             self.stl_evaluators[i].append_signals(signals)
         
@@ -190,15 +195,15 @@ class MyReacherEnv(gym.Env):
         self.video_mode=False
 
     def _get_obs(self):
-        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids[self.goal_to_reach:self.goal_to_reach+3]])
+        obs = np.concatenate([self.robot.observe(),self.flatten_goals_and_avoids[self.goal_to_reach:self.goal_to_reach+3],self.flatten_goals_and_avoids[:-self.num_of_avoids*3]])
         return obs
     
     def close(self):
         self.robot.close()
     def distances_from_goals(self):
         return np.linalg.norm(self.goals-self.get_position_of_end_effector(),axis=1)
-    def distance_from_avoid(self):
-        return np.array(np.linalg.norm(self.avoids-self.get_position_of_end_effector(),axis=1))
+    def distances_from_avoids(self):
+        return np.linalg.norm(self.avoids-self.get_position_of_end_effector(),axis=1)
     def get_position_of_end_effector(self):
         return np.array(p.getLinkState(self.robot.id,13)[0])
 
