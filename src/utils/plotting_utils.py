@@ -25,12 +25,14 @@ def plot_train_finals(dataframe,plots_path,column):
 
     dataframe.drop(columns=['Episode','Environment'],inplace=True)
 
-    values = dataframe.loc[dataframe.groupby('Total_Episode')['Step'].idxmax()].reset_index()
+    values = dataframe.loc[dataframe.groupby('Total_Episode')['Step'].idxmax()]
 
-    plt.plot(values['Total_Episode'],values[column])
+    plt.scatter(values[values[column] > 0]['Total_Episode'], values[values[column] > 0][column], color='green', label="Formula satisfied")
+    plt.scatter(values[values[column] <= 0]['Total_Episode'], values[values[column] <= 0][column], color='red', label="Formula not satisfied")
     plt.xlabel('Episode')
     plt.ylabel(f"Final {column}")
     plt.title(f"Final {column} per Episode")
+    plt.legend()
     plt.savefig(plots_path)
     plt.close()
 
