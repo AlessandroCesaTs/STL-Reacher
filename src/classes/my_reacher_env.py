@@ -60,7 +60,7 @@ class MyReacherEnv(gym.Env):
         signals=[[] for _ in range (self.num_of_signals)]
 
         complete_formula=["and",["F",["and",0,["F",1]]],["G",2]]
-        self.stl_formulas=[["and",["F",0],["G",2]],["and",["F",0],["G",2]],["G",2],complete_formula]
+        self.stl_formulas=[["and",["F",0],["G",2]],["and",["F",1],["G",2]],["G",2],complete_formula]
         #self.stl_formulas=[["F",0],["F",0]]
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
@@ -134,6 +134,7 @@ class MyReacherEnv(gym.Env):
             self.stl_evaluators[i].append_signals(signals)
         
         reward=self.stl_formula_evaluators[goal_to_reach](self.start_computing_robustness_from)
+        safety=self.stl_formula_evaluators[-2](0)
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
@@ -141,10 +142,10 @@ class MyReacherEnv(gym.Env):
                 self.start_computing_robustness_from=self.steps
             else:
                 terminated=True
-        elif (self.stl_formula_evaluators[-2](0)<0) or self.steps>self.max_steps:
+        elif (safety<0) or self.steps>self.max_steps:
             truncated=True
         
-        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach}            
+        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach,'safety':safety}            
         
         if terminated or truncated:
             final_robustness=self.stl_formula_evaluators[-1](0)
