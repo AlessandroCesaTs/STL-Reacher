@@ -33,6 +33,7 @@ class Trainer:
         os.makedirs(test_logs_path, exist_ok=True)
         
         rewards_log_path=os.path.join(test_logs_path,'rewards.csv')
+        safeties_log_path=os.path.join(test_logs_path,'safeties.csv')
         robustnesses_log_path=[os.path.join(test_logs_path,f"robustness_{i}.csv") for i in range(num_of_formulas_to_monitor)]
         final_robustness_log_path=os.path.join(test_logs_path,'final_robustness.csv')
         final_boolean_log_path=os.path.join(test_logs_path,'final_boolean.csv')
@@ -40,6 +41,7 @@ class Trainer:
         os.makedirs(videos_path, exist_ok=True)
 
         write_to_csv(rewards_log_path,['Run','Step','Reward'],'w')
+        write_to_csv(safeties_log_path,['Run','Step','Robustness'],'w')
         write_to_csv(final_robustness_log_path,['Run','Robustness'],'w')
         write_to_csv(final_boolean_log_path,['Run','Boolean'],'w')
         for robustness_index in range(num_of_formulas_to_monitor):
@@ -55,9 +57,11 @@ class Trainer:
                 action,_states=self.model.predict(observation)
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
                 step=info['step']
+                safety=info['safety']
                 goal_to_reach=info['goal_to_reach']
 
                 write_to_csv(rewards_log_path,[run,step,reward],'a')
+                write_to_csv(safeties_log_path,[run,step,safety],'a')
                 write_to_csv(robustnesses_log_path[goal_to_reach],[run,step,reward],'a')
                 
             final_robustness=info['final_robustness']

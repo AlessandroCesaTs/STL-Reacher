@@ -59,8 +59,9 @@ class MyReacherEnv(gym.Env):
 
         signals=[[] for _ in range (self.num_of_signals)]
 
-        complete_formula=["and",["F",["and",0,["F",1]]],["G",2]]
-        self.stl_formulas=[["and",["F",0],["G",2]],["and",["F",1],["G",2]],["G",2],complete_formula]
+        safety_formula=["G",2]
+        complete_formula=["and",["F",["and",0,["F",1]]],safety_formula]
+        self.stl_formulas=[["and",["F",0],safety_formula],["and",["F",1],safety_formula],safety_formula,complete_formula]
         #self.stl_formulas=[["F",0],["F",0]]
         self.stl_evaluators=[]
         self.stl_formula_evaluators=[]
