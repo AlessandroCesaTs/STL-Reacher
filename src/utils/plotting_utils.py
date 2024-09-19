@@ -18,6 +18,23 @@ def plot_train_means(dataframe,plots_path,column):
     plt.savefig(plots_path)
     plt.close()
 
+def plot_train_finals(dataframe,plots_path,column):
+
+    num_of_envs=dataframe['Environment'].max()+1
+    dataframe['Total_Episode']=dataframe['Episode']*num_of_envs+dataframe['Environment']
+
+    dataframe.drop(columns=['Episode','Environment'],inplace=True)
+
+    values = dataframe.loc[dataframe.groupby('Total_Episode')['Step'].idxmax()].reset_index()
+
+    plt.plot(values['Total_Episode'],values[column])
+    plt.xlabel('Episode')
+    plt.ylabel(f"Final {column}")
+    plt.title(f"Final {column} per Episode")
+    plt.savefig(plots_path)
+    plt.close()
+
+
 
 def plot_final_train_robustness(logs_path,plots_path):
     path=os.path.join(plots_path,f"final_robustness.png")

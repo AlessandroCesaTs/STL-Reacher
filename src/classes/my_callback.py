@@ -11,12 +11,12 @@ class MyCallback(BaseCallback):
         self.logs_path=logs_path
 
         self.rewards_log_path=os.path.join(self.logs_path,'rewards.csv')
-        self.safety_log_path=os.path.join(self.logs_path,'safety.csv')
+        self.safeties_log_path=os.path.join(self.logs_path,'safeties.csv')
         self.final_robustness_log_path=os.path.join(self.logs_path,'final_robustness.csv')
         self.final_boolean_log_path=os.path.join(self.logs_path,'final_boolean.csv')
 
         write_to_csv(self.rewards_log_path,['Environment','Episode','Step','Reward'],'w')
-        write_to_csv(self.safety_log_path,['Environment','Episode','Step','Robustness'],'w')
+        write_to_csv(self.safeties_log_path,['Environment','Episode','Step','Robustness'],'w')
         write_to_csv(self.final_robustness_log_path,['Environment','Episode','Robustness'],'w')
         write_to_csv(self.final_boolean_log_path,['Environment','Episode','Boolean'],'w')
         
@@ -49,7 +49,7 @@ class MyCallback(BaseCallback):
             reward=rewards[env_index]
 
             write_to_csv(self.rewards_log_path,[env_index,episode,step,reward],'a')
-            write_to_csv(self.safety_log_path,[env_index,episode,step,safety],'a')
+            write_to_csv(self.safeties_log_path,[env_index,episode,step,safety],'a')
 
             write_to_csv(self.robustnesses_log_paths[goal_to_reach],[env_index,episode,step,reward],'a')
                     
