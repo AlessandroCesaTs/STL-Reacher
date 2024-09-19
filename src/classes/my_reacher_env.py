@@ -146,7 +146,7 @@ class MyReacherEnv(gym.Env):
         elif (safety<0) or self.steps>self.max_steps:
             truncated=True
         
-        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach,'safety':safety}            
+        info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach,'safety':safety,'distances':distances_from_goals}            
         
         if terminated or truncated:
             final_robustness=self.stl_formula_evaluators[-1](0)
