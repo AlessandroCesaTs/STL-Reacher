@@ -34,6 +34,7 @@ class Trainer:
         
         rewards_log_path=os.path.join(test_logs_path,'rewards.csv')
         safeties_log_path=os.path.join(test_logs_path,'safeties.csv')
+        dist_log_path=os.path.join(test_logs_path,'dist.csv')
         robustnesses_log_path=[os.path.join(test_logs_path,f"robustness_{i}.csv") for i in range(num_of_formulas_to_monitor)]
         final_robustness_log_path=os.path.join(test_logs_path,'final_robustness.csv')
         final_boolean_log_path=os.path.join(test_logs_path,'final_boolean.csv')
@@ -42,6 +43,7 @@ class Trainer:
 
         write_to_csv(rewards_log_path,['Run','Step','Reward'],'w')
         write_to_csv(safeties_log_path,['Run','Step','Robustness'],'w')
+        write_to_csv(dist_log_path,['Run','Step','Distances'],'w')
         write_to_csv(final_robustness_log_path,['Run','Robustness'],'w')
         write_to_csv(final_boolean_log_path,['Run','Boolean'],'w')
         for robustness_index in range(num_of_formulas_to_monitor):
@@ -58,10 +60,12 @@ class Trainer:
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
                 step=info['step']
                 safety=info['safety']
+                distances=info['distances']
                 goal_to_reach=info['goal_to_reach']
 
                 write_to_csv(rewards_log_path,[run,step,reward],'a')
                 write_to_csv(safeties_log_path,[run,step,safety],'a')
+                write_to_csv(dist_log_path,[run,step,distances],'a')
                 write_to_csv(robustnesses_log_path[goal_to_reach],[run,step,reward],'a')
                 
             final_robustness=info['final_robustness']
