@@ -18,7 +18,7 @@ class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,num_of_goals=1,num_of_avoids=1,max_steps=100,visual=False,output_path=os.getcwd()):
         super().__init__()
         #self.observation_space = spaces.Box(low=-1, high=1, shape=(12+num_of_goals*3+num_of_avoids*3,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(15+num_of_avoids*3,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(18+num_of_avoids*3,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
@@ -78,6 +78,7 @@ class MyReacherEnv(gym.Env):
         self.start_computing_robustness_from=0
         
         self.robot.reset()
+        self.starting_point=self.get_position_of_end_effector()
 
         for i in range(self.number_of_formulas):
             self.stl_evaluators[i].reset_signals()
@@ -139,6 +140,7 @@ class MyReacherEnv(gym.Env):
 
         if reward>0:
             if self.goal_to_reach<self.num_of_goals-1:
+                self.starting_point=self.goals[self.goal_to_reach]
                 self.goal_to_reach+=1
                 self.start_computing_robustness_from=self.steps
             else:
@@ -198,9 +200,10 @@ class MyReacherEnv(gym.Env):
 
     def _get_obs(self):
         observation=self.robot.observe()
+        starting_point=self.starting_point
         goal=self.flatten_goals_and_avoids[self.goal_to_reach*3:self.goal_to_reach*3+3]
         avoid=self.flatten_goals_and_avoids[-self.num_of_avoids*3:]
-        obs=np.concatenate([observation,goal,avoid])
+        obs=np.concatenate([observation,starting_point,goal,avoid])
         return obs
     
     def close(self):
