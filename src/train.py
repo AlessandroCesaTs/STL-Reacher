@@ -20,6 +20,7 @@ if __name__=="__main__":
     parser.add_argument('--n_steps',type=int,default=128)
     parser.add_argument('--max_steps',type=int,default=100)
     parser.add_argument('--n_epochs',type=int,default=2)
+    parser.add_argument('--different_goals',type=int,default=2)
 
     args=parser.parse_args()
     output_path=args.output_path
@@ -27,6 +28,7 @@ if __name__=="__main__":
     n_steps=args.n_steps
     max_steps=args.max_steps
     n_epochs=args.n_epochs
+    different_goals=args.different_goals
     n_envs=get_num_cpus()
 
     os.makedirs(output_path,exist_ok=True)
@@ -38,7 +40,7 @@ if __name__=="__main__":
 
     trainer=Trainer(environment,model,output_path)
     
-    trainer.train(total_timesteps=total_timesteps)
+    trainer.train(total_timesteps=total_timesteps,different_goals=different_goals)
     
     environment.close()
 
