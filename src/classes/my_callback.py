@@ -28,11 +28,6 @@ class MyCallback(BaseCallback):
         """
         super().init_callback(model)
         self.num_envs=self.training_env.num_envs
-        self.number_of_formulas_to_monitor=self.training_env.get_attr('number_of_formulas_to_monitor',indices=0)[0]
-
-        self.robustnesses_log_paths=[os.path.join(self.logs_path,f"robustness_{i}.csv") for i in range(self.number_of_formulas_to_monitor)]
-        for robustness_index in range(self.number_of_formulas_to_monitor):
-            write_to_csv(self.robustnesses_log_paths[robustness_index],['Environment','Episode','Step','Robustness'],'w')
 
     def _on_step(self):
 
@@ -44,17 +39,14 @@ class MyCallback(BaseCallback):
             info=infos[env_index]
             episode=info['episode_number']
             step=info['step']
-            goal_to_reach=info['goal_to_reach']
             safety=info['safety']
             reward=rewards[env_index]
 
             write_to_csv(self.rewards_log_path,[env_index,episode,step,reward],'a')
             write_to_csv(self.safeties_log_path,[env_index,episode,step,safety],'a')
-
-            write_to_csv(self.robustnesses_log_paths[goal_to_reach],[env_index,episode,step,reward],'a')
                     
             if dones[env_index]:
-                final_robustness=info['final_robustness']
+                final_robustness=reward
                 final_boolean=info['final_boolean']
                 write_to_csv(self.final_robustness_log_path,[env_index,episode,final_robustness],'a')
                 write_to_csv(self.final_boolean_log_path,[env_index,episode,final_boolean],'a')
