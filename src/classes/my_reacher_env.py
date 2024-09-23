@@ -138,12 +138,14 @@ class MyReacherEnv(gym.Env):
         safety=self.stl_formula_evaluators[-2](0)
 
         if reward>0:
+            reward+=0.1
             if self.goal_to_reach<self.num_of_goals-1:
                 self.goal_to_reach+=1
                 self.start_computing_robustness_from=self.steps
             else:
                 terminated=True
         elif (safety<0) or self.steps>self.max_steps:
+            reward-=0.1
             truncated=True
         
         info={'episode_number':self.episodes,'step':self.steps,'goal_to_reach':goal_to_reach,'safety':safety,'distances':distances_from_goals}            
