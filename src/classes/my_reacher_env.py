@@ -32,7 +32,6 @@ class MyReacherEnv(gym.Env):
         self.robot.set(self.robot_initial_pose)
         self.new_start_goal_avoid()
 
-        
         self.min_distance=0.1
 
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
