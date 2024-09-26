@@ -28,7 +28,6 @@ if __name__=="__main__":
     n_steps=args.n_steps
     max_steps=args.max_steps
     n_epochs=args.n_epochs
-    different_goals=args.different_goals
     n_envs=get_num_cpus()
 
     os.makedirs(output_path,exist_ok=True)
@@ -40,7 +39,7 @@ if __name__=="__main__":
 
     trainer=Trainer(environment,model,output_path)
     
-    trainer.train(total_timesteps=total_timesteps,different_goals=different_goals)
+    trainer.train(total_timesteps=total_timesteps)
     
     environment.close()
 

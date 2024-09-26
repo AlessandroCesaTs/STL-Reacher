@@ -25,6 +25,6 @@ source env/bin/activate
 
 echo "Start Plotting"
 
-srun_if_on_slurm python3 src/plot_results.py git--test_runs=${test_runs} --output_path=${output_path}
+srun_if_on_slurm python3 src/plot_results.py --no-plot_test --test_runs=${test_runs} --output_path=${output_path}
 
 echo "Done Plotting"
