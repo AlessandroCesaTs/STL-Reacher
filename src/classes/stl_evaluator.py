@@ -126,6 +126,7 @@ class STLEvaluator:
         self.signals=[[] for _ in range (len(self.signals))]
         self.prev_results={}
 
+
 """
 x=[-1]
 signals=[x]

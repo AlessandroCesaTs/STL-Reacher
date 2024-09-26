@@ -75,7 +75,7 @@ class MyReacherEnv(gym.Env):
         self.reward_formula_evaluator=self.reward_evaluator.apply_formula()
 
         self.safety_evaluator.reset_signals()
-        self.safety_formula_evaluator=self.reward_evaluator.apply_formula()
+        self.safety_formula_evaluator=self.safety_evaluator.apply_formula()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -118,10 +118,8 @@ class MyReacherEnv(gym.Env):
 
         distance_from_goal=self.distance_from_goal()
         distance_from_avoid=self.distance_from_avoid()
-        print(f" distance from avoid {distance_from_avoid}")
         goal_signal=self.goal_sphere_radius-distance_from_goal
         avoid_signal=distance_from_avoid-self.goal_sphere_radius
-        print(f"avoid signal {avoid_signal}")
         signals=np.array([goal_signal,avoid_signal])
         self.reward_evaluator.append_signals(signals)
         self.safety_evaluator.append_signals(signals)
