@@ -10,7 +10,7 @@ class Trainer:
         self.output_path=output_path
         self.is_vectorized_environment=isinstance(self.environment,VecEnv)
 
-    def train(self,total_timesteps=81920,different_goals=100):
+    def train(self,total_timesteps=81920):
         train_logs_path=os.path.join(self.output_path,'train','logs')
         model_path=os.path.join(self.output_path,'model')
         os.makedirs(train_logs_path, exist_ok=True)
@@ -18,12 +18,8 @@ class Trainer:
         callback=MyCallback(train_logs_path)
 
         self.environment.reset()
-        for _ in range(different_goals):
-            if self.is_vectorized_environment:
-                self.environment.env_method('new_start_goal_avoid',indices=0)
-            else:
-                self.environment.new_start_goal_avoid()
-            self.model.learn(total_timesteps=total_timesteps//100,callback=callback,progress_bar=True)
+
+        self.model.learn(total_timesteps=total_timesteps,callback=callback)
         self.model.save(model_path)
 
     def test(self,test_runs=1,num_of_goals=1):

@@ -28,10 +28,6 @@ class MyReacherEnv(gym.Env):
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
 
-        self.robot_initial_pose=np.concatenate((np.random.uniform(-1,1,6),np.zeros(6)))
-        self.robot.set(self.robot_initial_pose)
-        self.new_start_goal_avoid()
-
         self.min_distance=0.1
 
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
@@ -52,6 +48,8 @@ class MyReacherEnv(gym.Env):
 
     def new_start_goal_avoid(self):
 
+        self.robot_initial_pose=np.concatenate((np.random.uniform(-1,1,6),np.zeros(6)))
+        self.robot.set(self.robot_initial_pose)
         self.starting_point=self.get_position_of_end_effector()
         self.goal=self.rhis.samplePoint()
         alpha=alpha = np.random.rand()
@@ -67,10 +65,11 @@ class MyReacherEnv(gym.Env):
             
             self.set_and_move_graphic_balls()
 
+    
     def reset(self,**kwargs):
         self.steps=0
         
-        self.robot.set(self.robot_initial_pose)
+        self.new_start_goal_avoid()
 
         self.reward_evaluator.reset_signals()
         self.reward_formula_evaluator=self.reward_evaluator.apply_formula()
@@ -119,12 +118,14 @@ class MyReacherEnv(gym.Env):
 
         distance_from_goal=self.distance_from_goal()
         distance_from_avoid=self.distance_from_avoid()
+        print(f" distance from avoid {distance_from_avoid}")
         goal_signal=self.goal_sphere_radius-distance_from_goal
         avoid_signal=distance_from_avoid-self.goal_sphere_radius
+        print(f"avoid signal {avoid_signal}")
         signals=np.array([goal_signal,avoid_signal])
         self.reward_evaluator.append_signals(signals)
         self.safety_evaluator.append_signals(signals)
-        
+
         reward=self.reward_formula_evaluator(0)
         safety=self.safety_formula_evaluator(0)
 
