@@ -12,14 +12,11 @@ class MyCallback(BaseCallback):
 
         self.rewards_log_path=os.path.join(self.logs_path,'rewards.csv')
         self.safeties_log_path=os.path.join(self.logs_path,'safeties.csv')
-        self.final_robustness_log_path=os.path.join(self.logs_path,'final_robustness.csv')
-        self.final_boolean_log_path=os.path.join(self.logs_path,'final_boolean.csv')
+        self.final_state_log_path=os.path.join(self.logs_path,'final_state.csv')
 
         write_to_csv(self.rewards_log_path,['Environment','Episode','Step','Reward'],'w')
         write_to_csv(self.safeties_log_path,['Environment','Episode','Step','Robustness'],'w')
-        write_to_csv(self.final_robustness_log_path,['Environment','Episode','Robustness'],'w')
-        write_to_csv(self.final_boolean_log_path,['Environment','Episode','Boolean'],'w')
-        
+        write_to_csv(self.final_state_log_path,['Environment','Episode','Robustness','End_Condition'],'w')        
 
     def init_callback(self, model: "base_class.BaseAlgorithm") -> None:
         """
@@ -47,9 +44,8 @@ class MyCallback(BaseCallback):
                     
             if dones[env_index]:
                 final_robustness=reward
-                final_boolean=info['final_boolean']
-                write_to_csv(self.final_robustness_log_path,[env_index,episode,final_robustness],'a')
-                write_to_csv(self.final_boolean_log_path,[env_index,episode,final_boolean],'a')
+                end_condition=info['end_condition']
+                write_to_csv(self.final_state_log_path,[env_index,episode,final_robustness,end_condition],'a')
 
         return True
     

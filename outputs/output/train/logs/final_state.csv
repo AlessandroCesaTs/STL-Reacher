@@ -1,0 +1,4 @@
+Environment,Episode,Robustness,End_Condition
+0,0,-0.05753827756626098,collision
+1,0,-0.042329838424836855,too_many_steps
+0,0,-0.03409643587342007,collision
