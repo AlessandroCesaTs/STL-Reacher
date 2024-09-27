@@ -123,30 +123,31 @@ class MyReacherEnv(gym.Env):
         distance_from_goal=self.distance_from_goal()
         distance_from_avoid=self.distance_from_avoid()
         goal_signal=self.goal_sphere_radius-distance_from_goal
-        avoid_signal=distance_from_avoid-self.min_distances
+        avoid_signal=distance_from_avoid-self.goal_sphere_radius
         signals=np.array([goal_signal,avoid_signal])
         self.reward_evaluator.append_signals(signals)
         self.safety_evaluator.append_signals(signals)
 
         reward=self.reward_formula_evaluator(0)
         safety=self.safety_formula_evaluator(0)
-
-        if reward>0:
-            terminated=True
-        elif (safety<-self.goal_sphere_radius) or self.steps>self.max_steps:
-            truncated=True
         
         info={'episode_number':self.episodes,'step':self.steps,'safety':safety,'distances':distance_from_goal}            
         
-        if terminated or truncated:
-            if self.steps>self.max_steps
-            if reward>0:
+        if reward>0:
+            terminated=True
+            if safety>self.goal_sphere_radius:
                 end_condition='perfect'
-            elif reward
-            final_boolean=int(reward>0)
-            info['final_boolean']=final_boolean
-            too_many_steps
-            self.episodes+=1
+            else:
+                end_condition='danger'
+        elif safety<=0 :
+            truncated=True
+            end_condition='collision'
+        elif self.steps>self.max_steps:
+            truncated=True
+            end_condition='too_many_steps'
+        
+        if terminated or truncated:
+            info['end_condition']=end_condition
 
         return reward, terminated, truncated, info
 

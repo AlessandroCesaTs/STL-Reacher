@@ -1,6 +1,9 @@
 import os
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import pandas as pd
+
+end_conditions_color_dict={'perfect':'green','danger':'yellow','collision':'red','too_many_steps':'black'}
 
 def plot_train_means(dataframe,plots_path,column):
 
@@ -18,44 +21,32 @@ def plot_train_means(dataframe,plots_path,column):
     plt.savefig(plots_path)
     plt.close()
 
-def plot_train_finals(dataframe,plots_path,column):
 
-    num_of_envs=dataframe['Environment'].max()+1
-    dataframe['Total_Episode']=dataframe['Episode']*num_of_envs+dataframe['Environment']
+def plot_final_train_robustness(logs_path, plots_path):
+    path = os.path.join(plots_path, f"final_state.png")
+    dataframe = pd.read_csv(os.path.join(logs_path, f"final_state.csv"))
 
-    dataframe.drop(columns=['Episode','Environment'],inplace=True)
+    num_of_envs = dataframe['Environment'].max() + 1
+    dataframe['Total_Episode'] = dataframe['Episode'] * num_of_envs + dataframe['Environment']
 
-    values = dataframe.loc[dataframe.groupby('Total_Episode')['Step'].idxmax()]
+    # Map the 'End_Condition' to the corresponding colors
+    colors = dataframe['End_Condition'].map(end_conditions_color_dict)
 
-    plt.scatter(values[values[column] > 0]['Total_Episode'], values[values[column] > 0][column], color='green', label="Formula satisfied")
-    plt.scatter(values[(-0.02<= values[column]) & (values[column]<= 0)]['Total_Episode'], values[(-0.02<= values[column]) & (values[column]<= 0)][column], color='red', label="Formula not satisfied")
-    plt.scatter(values[ values[column] < -0.02]['Total_Episode'], values[values[column] < -0.02][column], color='black', label="Dead")
-    plt.xlabel('Episode')
-    plt.ylabel(f"Final {column}")
-    plt.title(f"Final {column} per Episode")
-    plt.legend()
-    plt.savefig(plots_path)
-    plt.close()
+    plt.scatter(dataframe['Total_Episode'], dataframe["Robustness"], color=colors)
 
-
-
-def plot_final_train_robustness(logs_path,plots_path):
-    path=os.path.join(plots_path,f"final_robustness.png")
-    dataframe=pd.read_csv(os.path.join(logs_path,f"final_robustness.csv"))
-
-    num_of_envs=dataframe['Environment'].max()+1
-    dataframe['Total_Episode']=dataframe['Episode']*num_of_envs+dataframe['Environment']
-    values=dataframe['Robustness']
-
-    plt.scatter(dataframe['Total_Episode'][values > 0], values[values > 0], color='green', label="Formula satisfied")
-    plt.scatter(dataframe['Total_Episode'][(-0.02<=values) & (values <= 0)], values[(-0.02<=values) & (values <= 0)], color='red', label="Formula not satisfied")
-    plt.scatter(dataframe['Total_Episode'][values < -0.02], values[values < -0.02], color='black', label="Dead")
-
+    # Set up a custom legend
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', label='Perfect', markerfacecolor='green', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='Danger', markerfacecolor='yellow', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='Collision', markerfacecolor='red', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='Too Many Steps', markerfacecolor='black', markersize=10)
+    ]
+    
+    plt.legend(handles=legend_elements, loc="upper right", title="End Condition")
 
     plt.xlabel("Episode")
     plt.ylabel('Robustness')
-    plt.title(f"Final Robustness per episode")
-    plt.legend()
+    plt.title("Final Robustness per episode")
     plt.savefig(path)
     plt.close()
 
@@ -123,3 +114,13 @@ def plot_test_values(dataframe,plots_path,column,run):
     plt.title(f"{column} per Step at run {run}")
     plt.savefig(plots_path)
     plt.close()
+
+def get_end_condition_color(end_condition):
+    if end_condition=='perfect':
+        return 'green'
+    elif end_condition=='danger':
+        return 'yellow'
+    elif end_condition=='collision':
+        return 'red'
+    elif end_condition=='too_many_steps':
+        return 'black'

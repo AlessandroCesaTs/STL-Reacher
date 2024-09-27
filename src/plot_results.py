@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 
-from utils.plotting_utils import plot_train_means,plot_test_values,plot_final_train_robustness, plot_final_train_boolean, plot_final_test_robustness, plot_final_test_boolean,plot_train_finals
+from utils.plotting_utils import plot_train_means,plot_test_values,plot_final_train_robustness, plot_final_test_robustness, plot_final_test_boolean
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
@@ -26,13 +26,10 @@ if __name__=="__main__":
         train_rewards_dataframe=pd.read_csv(os.path.join(train_logs_path,'rewards.csv'))
         train_safeties_dataframe=pd.read_csv(os.path.join(train_logs_path,'safeties.csv'))
         rewards_plot_path=os.path.join(train_plots_path,'rewards.png')
-        safeties_plot_path=os.path.join(train_plots_path,'safeties.png')
 
         plot_train_means(train_rewards_dataframe,rewards_plot_path,'Reward')
-        plot_train_finals(train_safeties_dataframe,safeties_plot_path,'Robustness')
         
         plot_final_train_robustness(train_logs_path,train_plots_path)
-        plot_final_train_boolean(train_logs_path,train_plots_path)
 
     if plot_test:
         test_runs=args.test_runs
