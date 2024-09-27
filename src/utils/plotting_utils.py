@@ -28,7 +28,8 @@ def plot_train_finals(dataframe,plots_path,column):
     values = dataframe.loc[dataframe.groupby('Total_Episode')['Step'].idxmax()]
 
     plt.scatter(values[values[column] > 0]['Total_Episode'], values[values[column] > 0][column], color='green', label="Formula satisfied")
-    plt.scatter(values[values[column] <= 0]['Total_Episode'], values[values[column] <= 0][column], color='red', label="Formula not satisfied")
+    plt.scatter(values[(-0.02<= values[column]) & (values[column]<= 0)]['Total_Episode'], values[(-0.02<= values[column]) & (values[column]<= 0)][column], color='red', label="Formula not satisfied")
+    plt.scatter(values[ values[column] < -0.02]['Total_Episode'], values[values[column] < -0.02][column], color='black', label="Dead")
     plt.xlabel('Episode')
     plt.ylabel(f"Final {column}")
     plt.title(f"Final {column} per Episode")
@@ -47,7 +48,8 @@ def plot_final_train_robustness(logs_path,plots_path):
     values=dataframe['Robustness']
 
     plt.scatter(dataframe['Total_Episode'][values > 0], values[values > 0], color='green', label="Formula satisfied")
-    plt.scatter(dataframe['Total_Episode'][values <= 0], values[values <= 0], color='red', label="Formula not satisfied")
+    plt.scatter(dataframe['Total_Episode'][(-0.02<=values) & (values <= 0)], values[(-0.02<=values) & (values <= 0)], color='red', label="Formula not satisfied")
+    plt.scatter(dataframe['Total_Episode'][values < -0.02], values[values < -0.02], color='black', label="Dead")
 
 
     plt.xlabel("Episode")
@@ -67,7 +69,7 @@ def plot_final_train_boolean(logs_path,plots_path):
     values=dataframe['Boolean']
     
     plt.scatter(dataframe['Total_Episode'][values > 0], values[values > 0], color='green', label="Formula satisfied")
-    plt.scatter(dataframe['Total_Episode'][values <= 0], values[values <= 0], color='red', label="Formula not satisfied")
+    plt.scatter(dataframe['Total_Episode'][values <= -0.02], values[values  <= -0.02], color='black', label="Dead")
 
 
     plt.xlabel("Episode")

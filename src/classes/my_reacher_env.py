@@ -9,7 +9,6 @@ from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
 from classes.stl_evaluator import STLEvaluator
 
-
 from utils.utils import copy_urdf_directory
 
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
@@ -31,6 +30,7 @@ class MyReacherEnv(gym.Env):
         self.min_distance=0.1
 
         self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
+        self.min_distances=2*self.goal_sphere_radius
 
         self.steps=0
         self.start_computing_robustness_from=0
@@ -47,13 +47,17 @@ class MyReacherEnv(gym.Env):
         self.safety_formula_evaluator=self.safety_evaluator.apply_formula()
 
     def new_start_goal_avoid(self):
-
         self.robot_initial_pose=np.concatenate((np.random.uniform(-1,1,6),np.zeros(6)))
         self.robot.set(self.robot_initial_pose)
         self.starting_point=self.get_position_of_end_effector()
-        self.goal=self.rhis.samplePoint()
-        alpha=alpha = np.random.rand()
-        self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
+        
+        while True:
+            self.goal=self.rhis.samplePoint()
+            alpha=alpha = np.random.rand()
+            self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
+            if self.distance_from_goal()>self.min_distances and self.distance_from_avoid()>self.min_distances and np.linalg.norm(self.goal-self.avoid)>self.min_distances:
+                break
+
         normalized_starting_point=self.rhis.normalize(self.starting_point)
         normalized_goal=self.rhis.normalize(self.goal)
         normalized_avoid=self.rhis.normalize(self.avoid)
@@ -119,7 +123,7 @@ class MyReacherEnv(gym.Env):
         distance_from_goal=self.distance_from_goal()
         distance_from_avoid=self.distance_from_avoid()
         goal_signal=self.goal_sphere_radius-distance_from_goal
-        avoid_signal=distance_from_avoid-self.goal_sphere_radius
+        avoid_signal=distance_from_avoid-self.min_distances
         signals=np.array([goal_signal,avoid_signal])
         self.reward_evaluator.append_signals(signals)
         self.safety_evaluator.append_signals(signals)
@@ -129,14 +133,19 @@ class MyReacherEnv(gym.Env):
 
         if reward>0:
             terminated=True
-        elif (safety<0) or self.steps>self.max_steps:
+        elif (safety<-self.goal_sphere_radius) or self.steps>self.max_steps:
             truncated=True
         
         info={'episode_number':self.episodes,'step':self.steps,'safety':safety,'distances':distance_from_goal}            
         
         if terminated or truncated:
+            if self.steps>self.max_steps
+            if reward>0:
+                end_condition='perfect'
+            elif reward
             final_boolean=int(reward>0)
             info['final_boolean']=final_boolean
+            too_many_steps
             self.episodes+=1
 
         return reward, terminated, truncated, info
