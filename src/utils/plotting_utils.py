@@ -42,7 +42,7 @@ def plot_final_train_robustness(logs_path, plots_path):
         Line2D([0], [0], marker='o', color='w', label='Too Many Steps', markerfacecolor='black', markersize=10)
     ]
     
-    plt.legend(handles=legend_elements, loc="upper right", title="End Condition")
+    plt.legend(handles=legend_elements, loc="lower right", title="End Condition")
 
     plt.xlabel("Episode")
     plt.ylabel('Robustness')
@@ -114,13 +114,3 @@ def plot_test_values(dataframe,plots_path,column,run):
     plt.title(f"{column} per Step at run {run}")
     plt.savefig(plots_path)
     plt.close()
-
-def get_end_condition_color(end_condition):
-    if end_condition=='perfect':
-        return 'green'
-    elif end_condition=='danger':
-        return 'yellow'
-    elif end_condition=='collision':
-        return 'red'
-    elif end_condition=='too_many_steps':
-        return 'black'

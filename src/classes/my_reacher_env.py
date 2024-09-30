@@ -29,22 +29,25 @@ class MyReacherEnv(gym.Env):
 
         self.min_distance=0.1
 
-        self.goal_sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
-        self.min_distances=2*self.goal_sphere_radius
+        self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
+        self.min_distances=2*self.sphere_radius
+        self.soft_distance=0.05
 
         self.steps=0
         self.start_computing_robustness_from=0
         self.max_steps=max_steps  
         self.episodes=0
 
-        signals=[[],[]]
+        signals=[[],[],[]]
         
-        self.stl_formula=["and",["F",0],["G",1]]
-        self.reward_evaluator=STLEvaluator(signals,self.stl_formula)
-        self.reward_formula_evaluator=self.reward_evaluator.apply_formula()
+        self.soft_requirement=["and",["F",0],["G",1]]
+        self.hard_requirement=["G",2]
 
-        self.safety_evaluator=STLEvaluator(signals,self.stl_formula[-1])
-        self.safety_formula_evaluator=self.safety_evaluator.apply_formula()
+        self.soft_evaluator=STLEvaluator(signals,self.soft_requirement)
+        self.hard_evaluator=STLEvaluator(signals,self.hard_requirement)
+
+        self.soft_function=self.soft_evaluator.apply_formula()
+        self.hard_function=self.hard_evaluator.apply_formula()
 
     def new_start_goal_avoid(self):
         self.robot_initial_pose=np.concatenate((np.random.uniform(-1,1,6),np.zeros(6)))
@@ -75,11 +78,11 @@ class MyReacherEnv(gym.Env):
         
         self.new_start_goal_avoid()
 
-        self.reward_evaluator.reset_signals()
-        self.reward_formula_evaluator=self.reward_evaluator.apply_formula()
+        self.soft_evaluator.reset_signals()
+        self.hard_evaluator.reset_signals()
 
-        self.safety_evaluator.reset_signals()
-        self.safety_formula_evaluator=self.safety_evaluator.apply_formula()
+        self.soft_function=self.soft_evaluator.apply_formula()
+        self.hard_function=self.hard_evaluator.apply_formula()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -122,20 +125,23 @@ class MyReacherEnv(gym.Env):
 
         distance_from_goal=self.distance_from_goal()
         distance_from_avoid=self.distance_from_avoid()
-        goal_signal=self.goal_sphere_radius-distance_from_goal
-        avoid_signal=distance_from_avoid-self.goal_sphere_radius
-        signals=np.array([goal_signal,avoid_signal])
-        self.reward_evaluator.append_signals(signals)
-        self.safety_evaluator.append_signals(signals)
+        
+        goal_signal=self.sphere_radius-distance_from_goal
+        avoid_soft_signal=distance_from_avoid-self.soft_distance
+        avoid_hard_signal=distance_from_avoid-self.sphere_radius
 
-        reward=self.reward_formula_evaluator(0)
-        safety=self.safety_formula_evaluator(0)
+        signals=np.array([goal_signal,avoid_soft_signal,avoid_hard_signal])
+        self.soft_evaluator.append_signals(signals)
+        self.hard_evaluator.append_signals(signals)
+
+        reward=self.soft_function(0)
+        safety=self.hard_function(0)
         
         info={'episode_number':self.episodes,'step':self.steps,'safety':safety,'distances':distance_from_goal}            
         
         if reward>0:
             terminated=True
-            if safety>self.goal_sphere_radius:
+            if safety>self.soft_distance-self.sphere_radius:
                 end_condition='perfect'
             else:
                 end_condition='danger'
@@ -148,6 +154,7 @@ class MyReacherEnv(gym.Env):
         
         if terminated or truncated:
             info['end_condition']=end_condition
+            self.episodes+=1
 
         return reward, terminated, truncated, info
 
