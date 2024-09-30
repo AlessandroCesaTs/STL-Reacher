@@ -134,7 +134,7 @@ class MyReacherEnv(gym.Env):
         distance_from_avoid=self.distance_from_avoid()
         
         goal_signal=self.sphere_radius-distance_from_goal
-        avoid_soft_signal=distance_from_avoid-self.soft_distance
+        avoid_soft_signal=100*(distance_from_avoid-self.soft_distance)
         avoid_hard_signal=distance_from_avoid-self.sphere_radius
 
         signals=np.array([goal_signal,avoid_soft_signal,avoid_hard_signal])
