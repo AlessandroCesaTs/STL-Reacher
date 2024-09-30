@@ -16,14 +16,14 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,visual=False,output_path=os.getcwd()):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(21,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(19,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(5,), dtype=np.float32)
         self.output_path=output_path
 
         self.video_mode=False
 
         self.urdf_dir=copy_urdf_directory(urdf_dir)
-        self.rhis = RandomPointInHalfSphere(0.0,0.0369,0.0437,radius=0.2022,height=0.2610,min_dist=0.1)
+        self.rhis = RandomPointInHalfSphere(0,0,0,radius=0.2,min_dist=0.1)
 
         self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
 
@@ -32,6 +32,7 @@ class MyReacherEnv(gym.Env):
         self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
         self.min_distances=2*self.sphere_radius
         self.soft_distance=0.05
+        self.max_iterations_to_check_point=500
 
         self.steps=0
         self.start_computing_robustness_from=0
@@ -50,21 +51,27 @@ class MyReacherEnv(gym.Env):
         self.hard_function=self.hard_evaluator.apply_formula()
 
     def new_start_goal_avoid(self):
-        self.robot_initial_pose=np.concatenate((np.random.uniform(-1,1,6),np.zeros(6)))
-        self.robot.set(self.robot_initial_pose)
-        self.starting_point=self.get_position_of_end_effector()
-        
-        while True:
-            self.goal=self.rhis.samplePoint()
-            alpha=alpha = np.random.rand()
-            self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
-            if self.distance_from_goal()>self.min_distances and self.distance_from_avoid()>self.min_distances and np.linalg.norm(self.goal-self.avoid)>self.min_distances:
-                break
 
-        normalized_starting_point=self.rhis.normalize(self.starting_point)
-        normalized_goal=self.rhis.normalize(self.goal)
-        normalized_avoid=self.rhis.normalize(self.avoid)
-        self.flatten_points=np.concatenate([normalized_starting_point.flatten(),normalized_goal.flatten(),normalized_avoid.flatten()])
+        self.starting_point,initial_pose=self.get_reachable_point()
+        
+        points_found=False
+        while not points_found:
+            self.goal,_=self.get_reachable_point()
+            start_goal_distance=np.linalg.norm(self.starting_point - self.goal)
+            if start_goal_distance<self.min_distances:
+                points_found=False
+            else:
+                alpha_min=self.sphere_radius/start_goal_distance
+                alpha_max=1-alpha_min
+                alpha =  np.random.uniform(alpha_min, alpha_max)
+                self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
+                avoid_is_reachable,_=self.is_reachable(self.avoid)
+                if avoid_is_reachable:
+                    points_found=True
+                else:
+                    points_found=False
+
+        self.flatten_points=np.concatenate([self.starting_point,self.goal,self.avoid])
 
         if self.video_mode:
             self.goal_balls=Ball(self.urdf_dir,color="green")
@@ -210,4 +217,32 @@ class MyReacherEnv(gym.Env):
         return np.linalg.norm(self.avoid-self.get_position_of_end_effector())
     def get_position_of_end_effector(self):
         return np.array(p.getLinkState(self.robot.id,13)[0])
+
+    def get_reachable_point(self):
+        reachable=False
+        while not reachable:
+            point=self.rhis.samplePoint()
+            reachable, joints_positions_velocities = self.is_reachable(point)
+        self.robot.set(np.zeros(10))
+        return point,joints_positions_velocities
+
+    def is_reachable(self, point):
+        distance=np.inf
+        iter=0
+        while distance>self.sphere_radius and iter<self.max_iterations_to_check_point:
+            joints_positions=p.calculateInverseKinematics(bodyIndex=1, 
+                                        endEffectorLinkIndex=13, 
+                                        targetPosition=point)
+            joints_positions_velocities=np.concatenate([np.array(joints_positions),np.zeros(5)])
+            self.robot.set(joints_positions_velocities)
+            end_effector_position=self.get_position_of_end_effector()
+            distance=np.linalg.norm(end_effector_position-point)
+            iter+=1
+        if iter!=self.max_iterations_to_check_point:
+            reachable=True
+        else:
+            reachable=False
+        return reachable,joints_positions_velocities
+    
+        
 
