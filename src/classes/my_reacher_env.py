@@ -41,11 +41,21 @@ class MyReacherEnv(gym.Env):
 
         signals=[[],[]]
         
-        self.requirement=["and",["F",["G",0]],["G",1]]
+
+        self.reach_formula=["F",0]
+        self.stay_formula=["F",["G",0]]
+        self.collision_formula=["G",1]
+        self.requirement=["and",self.stay_formula,self.collision_formula]
 
         self.evaluator=STLEvaluator(signals,self.requirement)
+        self.reach_evaluator=STLEvaluator(signals,self.reach_formula)
+        self.stay_evaluator=STLEvaluator(signals,self.stay_formula)
+        self.collision_evaluator=STLEvaluator(signals,self.collision_formula)
 
         self.evaluating_function=self.evaluator.apply_formula()
+        self.reach_evaluating_function=self.reach_evaluator.apply_formula()
+        self.stay_evaluating_function=self.stay_evaluator.apply_formula()
+        self.collision_evaluating_function=self.collision_evaluator.apply_formula()
 
     def new_start_goal_avoid(self):
 
@@ -68,7 +78,7 @@ class MyReacherEnv(gym.Env):
                 else:
                     points_found=False
 
-        self.flatten_points=np.concatenate([self.starting_point,self.goal,self.avoid])
+        self.flatten_points=np.concatenate([self.goal,self.avoid])
 
         if self.video_mode:
             self.goal_balls=Ball(self.urdf_dir,color="green")
@@ -85,8 +95,14 @@ class MyReacherEnv(gym.Env):
         self.new_start_goal_avoid()
 
         self.evaluator.reset_signals()
+        self.reach_evaluator.reset_signals()
+        self.stay_evaluator.reset_signals()
+        self._collision_evaluator.reset_signals()
 
         self.evaluating_function=self.evaluator.apply_formula()
+        self.reach_evaluating_function=self.reach_evaluator.apply_formula()
+        self.stay_evaluating_function=self.stay_evaluator.apply_formula()
+        self.collision_evaluating_function=self.collision_evaluator.apply_formula()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -135,6 +151,9 @@ class MyReacherEnv(gym.Env):
 
         signals=np.array([goal_signal,avoid_signal])
         self.evaluator.append_signals(signals)
+        self.reach_evaluator.append_signals(signals)
+        self.stay_evaluator.append_signals(signals)
+        self.collision_evaluator.append_signals(signals)
 
         reward=self.evaluating_function(0)
         
@@ -142,10 +161,17 @@ class MyReacherEnv(gym.Env):
         
         if self.steps>self.max_steps:
             terminated=True
-            if reward>0:
-                end_condition='satisfied'
-            else:
-                end_condition='not_satisfied'
+            if self.reach_evaluating_function(0)>0:
+                if self.collision_evaluating_function(0)>0:
+                    if self.stay_evaluating_function(0)>0:
+                        end_condition='no_collision_stay'
+                    else:
+                        end_condition='no_collision_no_stay'
+                else:
+                    if self.stay_evaluating_function(0)>0:
+                        end_condition='collision_stay'
+                    else:
+                        end_condition='collision_no_stay'
                 
 
         if terminated or truncated:
@@ -195,7 +221,8 @@ class MyReacherEnv(gym.Env):
 
     def _get_obs(self):
         observation=self.robot.observe()
-        obs=np.concatenate([observation,self.flatten_points])
+        position_of_end_effector=self.get_position_of_end_effector()
+        obs=np.concatenate([observation,position_of_end_effector,self.flatten_points])
         return obs
     
     def close(self):
