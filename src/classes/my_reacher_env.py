@@ -170,7 +170,7 @@ class MyReacherEnv(gym.Env):
                     else:
                         print(f"i'm on reach_no_stay_no_collision, stay is {self.stay_evaluating_function(0)}, collision is {self.collision_evaluating_function(0)}, reward is {reward}")
                         end_condition='reach_no_stay_no_collision'
-                        torch.save(signals,'/u/dssc/acesa000/STL-Reacher/outputs/signal.pt')
+                        torch.save(self.evaluator.signals,'/u/dssc/acesa000/STL-Reacher/outputs/signal.pt')
                 else:
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_collision'
