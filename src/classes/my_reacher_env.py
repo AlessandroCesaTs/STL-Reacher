@@ -30,7 +30,7 @@ class MyReacherEnv(gym.Env):
         self.min_distance=0.1
 
         self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
-        self.min_distances=2*self.sphere_radius
+        self.min_distances=0.1
         self.soft_distance=0.05
         self.max_iterations_to_check_point=500
 
@@ -61,7 +61,7 @@ class MyReacherEnv(gym.Env):
             if start_goal_distance<self.min_distances:
                 points_found=False
             else:
-                alpha_min=self.sphere_radius/start_goal_distance
+                alpha_min=self.min_distances/start_goal_distance
                 alpha_max=1-alpha_min
                 alpha =  np.random.uniform(alpha_min, alpha_max)
                 self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
@@ -78,6 +78,8 @@ class MyReacherEnv(gym.Env):
             self.avoid_balls=Ball(self.urdf_dir,color="red")
             
             self.set_and_move_graphic_balls()
+        
+        self.robot.set(initial_pose)
 
     
     def reset(self,**kwargs):
@@ -134,7 +136,7 @@ class MyReacherEnv(gym.Env):
         distance_from_avoid=self.distance_from_avoid()
         
         goal_signal=self.sphere_radius-distance_from_goal
-        avoid_soft_signal=100*(distance_from_avoid-self.soft_distance)
+        avoid_soft_signal=10*(distance_from_avoid-self.soft_distance)
         avoid_hard_signal=distance_from_avoid-self.sphere_radius
 
         signals=np.array([goal_signal,avoid_soft_signal,avoid_hard_signal])
@@ -152,14 +154,16 @@ class MyReacherEnv(gym.Env):
                 end_condition='perfect'
             else:
                 end_condition='danger'
-        elif safety<=0 :
-            truncated=True
-            end_condition='collision'
+        #elif safety<=0 :
+        #    truncated=True
+        #    end_condition='collision'
         elif self.steps>self.max_steps:
             truncated=True
             end_condition='too_many_steps'
         
         if terminated or truncated:
+            if safety<0:
+                end_condition='collision'
             info['end_condition']=end_condition
             self.episodes+=1
 
