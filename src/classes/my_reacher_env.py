@@ -8,7 +8,7 @@ from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
 from classes.stl_evaluator import STLEvaluator
-
+import torch
 from utils.utils import copy_urdf_directory
 
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
@@ -168,7 +168,9 @@ class MyReacherEnv(gym.Env):
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_no_collision'
                     else:
+                        print(f"i'm on reach_no_stay_no_collision, stay is {self.stay_evaluating_function(0)}, collision is {self.collision_evaluating_function(0)}, reward is {reward}")
                         end_condition='reach_no_stay_no_collision'
+                        torch.save(signals,'/u/dssc/acesa000/STL-Reacher/outputs/signal.pt')
                 else:
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_collision'
