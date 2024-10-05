@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 
-end_conditions_color_dict={'perfect':'green','danger':'yellow','collision':'red','too_many_steps':'black'}
+end_conditions_color_dict={'satisfied':'green','not_satisfied':'red'}
 
 def plot_train_means(dataframe,plots_path,column):
 
@@ -36,10 +36,8 @@ def plot_final_train_robustness(logs_path, plots_path):
 
     # Set up a custom legend
     legend_elements = [
-        Line2D([0], [0], marker='o', color='w', label='Perfect', markerfacecolor='green', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='Danger', markerfacecolor='yellow', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='Collision', markerfacecolor='red', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='Too Many Steps', markerfacecolor='black', markersize=10)
+        Line2D([0], [0], marker='o', color='w', label='satisfied', markerfacecolor='green', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
     ]
     
     plt.legend(handles=legend_elements, loc="lower right", title="End Condition")

@@ -39,16 +39,13 @@ class MyReacherEnv(gym.Env):
         self.max_steps=max_steps  
         self.episodes=0
 
-        signals=[[],[],[]]
+        signals=[[],[]]
         
-        self.soft_requirement=["and",["F",0],["G",1]]
-        self.hard_requirement=["G",2]
+        self.requirement=["and",["F",["G",0]],["G",1]]
 
-        self.soft_evaluator=STLEvaluator(signals,self.soft_requirement)
-        self.hard_evaluator=STLEvaluator(signals,self.hard_requirement)
+        self.evaluator=STLEvaluator(signals,self.requirement)
 
-        self.soft_function=self.soft_evaluator.apply_formula()
-        self.hard_function=self.hard_evaluator.apply_formula()
+        self.evaluating_function=self.evaluator.apply_formula()
 
     def new_start_goal_avoid(self):
 
@@ -87,11 +84,9 @@ class MyReacherEnv(gym.Env):
         
         self.new_start_goal_avoid()
 
-        self.soft_evaluator.reset_signals()
-        self.hard_evaluator.reset_signals()
+        self.evaluator.reset_signals()
 
-        self.soft_function=self.soft_evaluator.apply_formula()
-        self.hard_function=self.hard_evaluator.apply_formula()
+        self.evaluating_function=self.evaluator.apply_formula()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -136,34 +131,24 @@ class MyReacherEnv(gym.Env):
         distance_from_avoid=self.distance_from_avoid()
         
         goal_signal=self.sphere_radius-distance_from_goal
-        avoid_soft_signal=10*(distance_from_avoid-self.soft_distance)
-        avoid_hard_signal=distance_from_avoid-self.sphere_radius
+        avoid_signal=distance_from_avoid-self.sphere_radius
 
-        signals=np.array([goal_signal,avoid_soft_signal,avoid_hard_signal])
-        self.soft_evaluator.append_signals(signals)
-        self.hard_evaluator.append_signals(signals)
+        signals=np.array([goal_signal,avoid_signal])
+        self.evaluator.append_signals(signals)
 
-        reward=self.soft_function(0)
-        safety=self.hard_function(0)
+        reward=self.evaluating_function(0)
         
-        info={'episode_number':self.episodes,'step':self.steps,'safety':safety,'distances':distance_from_goal}            
+        info={'episode_number':self.episodes,'step':self.steps,'distances':distance_from_goal}            
         
-        if reward>0:
+        if self.steps>self.max_steps:
             terminated=True
-            if safety>self.soft_distance-self.sphere_radius:
-                end_condition='perfect'
+            if reward>0:
+                end_condition='satisfied'
             else:
-                end_condition='danger'
-        #elif safety<=0 :
-        #    truncated=True
-        #    end_condition='collision'
-        elif self.steps>self.max_steps:
-            truncated=True
-            end_condition='too_many_steps'
-        
+                end_condition='not_satisfied'
+                
+
         if terminated or truncated:
-            if safety<0:
-                end_condition='collision'
             info['end_condition']=end_condition
             self.episodes+=1
 
