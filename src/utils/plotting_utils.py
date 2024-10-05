@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 
-end_conditions_color_dict={'satisfied':'green','not_satisfied':'red'}
+end_conditions_color_dict={'reach_stay_no_collision':'green','reach_no_stay_no_collision':'yellow',
+                            'reach_stay_collision':'brown','reach_no_stay_collision':'red',
+                            'no_reach_no_collision':'gray',
+                            'no_reach_collision':'black'}
 
 def plot_train_means(dataframe,plots_path,column):
 
@@ -36,9 +39,15 @@ def plot_final_train_robustness(logs_path, plots_path):
 
     # Set up a custom legend
     legend_elements = [
-        Line2D([0], [0], marker='o', color='w', label='satisfied', markerfacecolor='green', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='reach_stay_no_collision', markerfacecolor='green', markersize=10),
         Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10)
     ]
+    legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in end_conditions_color_dict.items()]
+
     
     plt.legend(handles=legend_elements, loc="lower right", title="End Condition")
 

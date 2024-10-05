@@ -97,7 +97,7 @@ class MyReacherEnv(gym.Env):
         self.evaluator.reset_signals()
         self.reach_evaluator.reset_signals()
         self.stay_evaluator.reset_signals()
-        self._collision_evaluator.reset_signals()
+        self.collision_evaluator.reset_signals()
 
         self.evaluating_function=self.evaluator.apply_formula()
         self.reach_evaluating_function=self.reach_evaluator.apply_formula()
@@ -164,15 +164,19 @@ class MyReacherEnv(gym.Env):
             if self.reach_evaluating_function(0)>0:
                 if self.collision_evaluating_function(0)>0:
                     if self.stay_evaluating_function(0)>0:
-                        end_condition='no_collision_stay'
+                        end_condition='reach_stay_no_collision'
                     else:
-                        end_condition='no_collision_no_stay'
+                        end_condition='reach_no_stay_no_collision'
                 else:
                     if self.stay_evaluating_function(0)>0:
-                        end_condition='collision_stay'
+                        end_condition='reach_stay_collision'
                     else:
-                        end_condition='collision_no_stay'
-                
+                        end_condition='reach_no_stay_collision'
+            else:
+                if self.collision_evaluating_function(0)>0:
+                    end_condition='no_reach_no_collision'
+                else:
+                    end_condition='no_reach_collision'
 
         if terminated or truncated:
             info['end_condition']=end_condition
