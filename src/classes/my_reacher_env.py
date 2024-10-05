@@ -57,6 +57,8 @@ class MyReacherEnv(gym.Env):
         self.stay_evaluating_function=self.stay_evaluator.apply_formula()
         self.collision_evaluating_function=self.collision_evaluator.apply_formula()
 
+        self.new_start_goal_avoid()
+
     def new_start_goal_avoid(self):
 
         self.starting_point,initial_pose=self.get_reachable_point()
@@ -92,7 +94,7 @@ class MyReacherEnv(gym.Env):
     def reset(self,**kwargs):
         self.steps=0
         
-        self.new_start_goal_avoid()
+        #self.new_start_goal_avoid()
 
         self.evaluator.reset_signals()
         self.reach_evaluator.reset_signals()

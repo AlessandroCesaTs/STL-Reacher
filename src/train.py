@@ -28,7 +28,8 @@ if __name__=="__main__":
     n_steps=args.n_steps
     max_steps=args.max_steps
     n_epochs=args.n_epochs
-    n_envs=get_num_cpus()
+    #n_envs=get_num_cpus()
+    n_envs=1
 
     os.makedirs(output_path,exist_ok=True)
 
