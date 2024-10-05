@@ -11,11 +11,9 @@ class MyCallback(BaseCallback):
         self.logs_path=logs_path
 
         self.rewards_log_path=os.path.join(self.logs_path,'rewards.csv')
-        self.safeties_log_path=os.path.join(self.logs_path,'safeties.csv')
         self.final_state_log_path=os.path.join(self.logs_path,'final_state.csv')
 
         write_to_csv(self.rewards_log_path,['Environment','Episode','Step','Reward'],'w')
-        write_to_csv(self.safeties_log_path,['Environment','Episode','Step','Robustness'],'w')
         write_to_csv(self.final_state_log_path,['Environment','Episode','Robustness','End_Condition'],'w')        
 
     def init_callback(self, model: "base_class.BaseAlgorithm") -> None:
@@ -36,11 +34,9 @@ class MyCallback(BaseCallback):
             info=infos[env_index]
             episode=info['episode_number']
             step=info['step']
-            safety=info['safety']
             reward=rewards[env_index]
 
             write_to_csv(self.rewards_log_path,[env_index,episode,step,reward],'a')
-            write_to_csv(self.safeties_log_path,[env_index,episode,step,safety],'a')
                     
             if dones[env_index]:
                 final_robustness=reward
