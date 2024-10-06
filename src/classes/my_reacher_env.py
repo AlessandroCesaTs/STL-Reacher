@@ -8,19 +8,20 @@ from gym_ergojr.sim.single_robot import SingleRobot
 from gym_ergojr.sim.objects import Ball
 from gym_ergojr.utils.math import RandomPointInHalfSphere
 from classes.stl_evaluator import STLEvaluator
-import torch
+import pickle
 from utils.utils import copy_urdf_directory
 
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,visual=False,output_path=os.getcwd()):
+    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,visual=False,output_path=os.getcwd(),change_target=False):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(19,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(5,), dtype=np.float32)
         self.output_path=output_path
 
         self.video_mode=False
+        self.change_target=change_target
 
         self.urdf_dir=copy_urdf_directory(urdf_dir)
         self.rhis = RandomPointInHalfSphere(0,0,0,radius=0.2,min_dist=0.1)
@@ -57,7 +58,22 @@ class MyReacherEnv(gym.Env):
         self.stay_evaluating_function=self.stay_evaluator.apply_formula()
         self.collision_evaluating_function=self.collision_evaluator.apply_formula()
 
-        self.new_start_goal_avoid()
+        if not self.change_target:
+            self.new_start_goal_avoid()
+
+    def set_start_goal_avoid_from_file(self):
+        with open(os.path.join(self.output_path,'setting.pkl'), 'rb') as f:
+            setting = pickle.load(f)
+        self.starting_point=setting['starting_point']
+        initial_pose=setting['initial_pose']
+        self.goal=setting['goal']
+        self.avoid=setting['avoid']
+        self.flatten_points=np.concatenate([self.goal,self.avoid])
+        self.robot.set(initial_pose)
+
+        if self.video_mode:
+            self.set_and_move_graphic_balls()
+
 
     def new_start_goal_avoid(self):
 
@@ -83,18 +99,20 @@ class MyReacherEnv(gym.Env):
         self.flatten_points=np.concatenate([self.goal,self.avoid])
 
         if self.video_mode:
-            self.goal_balls=Ball(self.urdf_dir,color="green")
-            self.avoid_balls=Ball(self.urdf_dir,color="red")
-            
             self.set_and_move_graphic_balls()
         
         self.robot.set(initial_pose)
+        if not self.change_target:
+            setting={'starting_point':self.starting_point, 'initial_pose':initial_pose,'goal':self.goal,'avoid':self.avoid}
+            with open(os.path.join(self.output_path,'setting.pkl'),'wb') as f:
+                pickle.dump(setting,f)
 
     
     def reset(self,**kwargs):
         self.steps=0
         
-        #self.new_start_goal_avoid()
+        if self.change_target:
+            self.new_start_goal_avoid()
 
         self.evaluator.reset_signals()
         self.reach_evaluator.reset_signals()
@@ -159,8 +177,6 @@ class MyReacherEnv(gym.Env):
 
         reward=self.evaluating_function(0)
 
-        if reward>0 and self.stay_evaluating_function(0)<=0:
-            print(f"Stay is {self.stay_evaluating_function(0)}, collision is {self.collision_evaluating_function(0)}, reward is {reward}")
         
         info={'episode_number':self.episodes,'step':self.steps,'distances':distance_from_goal}            
         
@@ -171,9 +187,7 @@ class MyReacherEnv(gym.Env):
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_no_collision'
                     else:
-                        print(f"i'm on reach_no_stay_no_collision, stay is {self.stay_evaluating_function(0)}, collision is {self.collision_evaluating_function(0)}, reward is {reward}")
                         end_condition='reach_no_stay_no_collision'
-                        torch.save(self.evaluator.signals,'/u/dssc/acesa000/STL-Reacher/outputs/signal.pt')
                 else:
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_collision'
@@ -225,6 +239,8 @@ class MyReacherEnv(gym.Env):
         self.frames=[]
         self.image_size=(640,480)
         self.fps=5
+        self.goal_balls=Ball(self.urdf_dir,color="green")
+        self.avoid_balls=Ball(self.urdf_dir,color="red")
         self.video_mode=True
 
     def disable_video_mode(self):

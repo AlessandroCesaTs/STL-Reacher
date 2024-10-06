@@ -11,8 +11,9 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=$(pwd)/outputs/${1:-output}
-num_of_iters=${2:-1}
+change_target=${1:-'--change-target'}
+output_path=$(pwd)/outputs/${2:-'output'}
+
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
@@ -30,10 +31,8 @@ fi
 
 source env/bin/activate
 
-for i in {0..${num_of_iters}}
-do
-    echo "Start Training"
-    srun_if_on_slurm python3 -u src/train.py --total_timesteps=${total_timesteps} --n_steps=${n_steps} --n_epochs=${n_epochs} --max_steps=${max_steps} --output_path=${output_path}
-done 
+
+echo "Start Training"
+srun_if_on_slurm python3 -u src/train.py --total_timesteps=${total_timesteps} --n_steps=${n_steps} --n_epochs=${n_epochs} --max_steps=${max_steps} --output_path=${output_path} ${change_target}
 
 echo "Job completed"

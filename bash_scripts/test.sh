@@ -11,7 +11,8 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=$(pwd)/outputs/${1:-output}
+change_target=${1:-'--change-target'}
+output_path=$(pwd)/outputs/${2:-output}
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
@@ -29,6 +30,6 @@ source env/bin/activate
 
 echo "Start Testing"
 
-srun_if_on_slurm python3 src/test.py --num_of_goals=2 --max_steps=${max_steps} --test_runs=${test_runs} --output_path=${output_path}
+srun_if_on_slurm python3 src/test.py --num_of_goals=2 --max_steps=${max_steps} --test_runs=${test_runs} --output_path=${output_path} ${change_target}
 
 echo "Done Testing"

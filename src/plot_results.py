@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 
-from utils.plotting_utils import plot_train_means,plot_test_values,plot_final_train_robustness, plot_final_test_robustness, plot_final_test_boolean
+from utils.plotting_utils import plot_train_rewards,plot_test_rewards,plot_final_test_robustness, plot_test_final_state, plot_final_test_boolean
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
@@ -27,9 +27,9 @@ if __name__=="__main__":
         train_safeties_dataframe=pd.read_csv(os.path.join(train_logs_path,'safeties.csv'))
         rewards_plot_path=os.path.join(train_plots_path,'rewards.png')
 
-        plot_train_means(train_rewards_dataframe,rewards_plot_path,'Reward')
+        plot_train_rewards(train_rewards_dataframe,rewards_plot_path,'Reward')
         
-        plot_final_train_robustness(train_logs_path,train_plots_path)
+        plot_final_test_robustness(train_logs_path,train_plots_path)
 
     if plot_test:
         test_runs=args.test_runs
@@ -40,20 +40,15 @@ if __name__=="__main__":
         os.makedirs(test_plots_path,exist_ok=True)
 
         train_rewards_dataframe=pd.read_csv(os.path.join(test_logs_path,'rewards.csv'))
-        train_safeties_dataframe=pd.read_csv(os.path.join(test_logs_path,'safeties.csv'))
+        train_final_state_dataframe=pd.read_csv(os.path.join(test_logs_path,'final_state.csv'))
         
-        plot_final_test_robustness(test_logs_path,test_plots_path)
-        plot_final_test_boolean(test_logs_path,test_plots_path)
+        plot_test_final_state(test_logs_path,test_plots_path)
 
         for run in range(test_runs):
             test_run_plots_path=os.path.join(test_plots_path,f"run_{run}")
             os.makedirs(test_run_plots_path,exist_ok=True)
             test_run_rewards_plot_path=os.path.join(test_run_plots_path,'rewards.png')
-            plot_test_values(train_rewards_dataframe,test_run_rewards_plot_path,'Reward',run)
-
-            test_run_safeties_plot_path=os.path.join(test_run_plots_path,'safeties.png')
-            plot_test_values(train_safeties_dataframe,test_run_safeties_plot_path,'Robustness',run)
-
+            plot_test_rewards(train_rewards_dataframe,test_run_rewards_plot_path,run)
              
 
 
