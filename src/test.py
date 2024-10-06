@@ -35,6 +35,6 @@ if __name__=="__main__":
     if change_target:
         pass
     else:
-        trainer.test_single_target(test_runs=test_runs,num_of_goals=num_of_goals)
+        trainer.test_single_target(test_runs=test_runs)
     
     environment.close()

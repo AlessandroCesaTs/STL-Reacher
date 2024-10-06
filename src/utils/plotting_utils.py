@@ -8,7 +8,9 @@ end_conditions_color_dict={'reach_stay_no_collision':'green','reach_no_stay_no_c
                             'no_reach_no_collision':'gray',
                             'no_reach_collision':'black'}
 
-def plot_train_rewards(dataframe,plots_path):
+def plot_train_rewards(logs_path,plots_path):
+    path = os.path.join(plots_path, f"rewards.png")
+    dataframe = pd.read_csv(os.path.join(logs_path, f"rewards.csv"))
 
     num_of_envs=dataframe['Environment'].max()+1
     dataframe['Total_Episode']=dataframe['Episode']*num_of_envs+dataframe['Environment']
@@ -25,9 +27,9 @@ def plot_train_rewards(dataframe,plots_path):
     plt.close()
 
 
-def plot_final_test_robustness(logs_path, plots_path):
-    path = os.path.join(plots_path, f"final_state.png")
-    dataframe = pd.read_csv(os.path.join(logs_path, f"final_state.csv"))
+def plot_train_end_condition(logs_path, plots_path):
+    path = os.path.join(plots_path, 'end_conditions.png')
+    dataframe = pd.read_csv(os.path.join(logs_path, 'end_conditions.csv'))
 
     num_of_envs = dataframe['Environment'].max() + 1
     dataframe['Total_Episode'] = dataframe['Episode'] * num_of_envs + dataframe['Environment']
@@ -58,9 +60,9 @@ def plot_final_test_robustness(logs_path, plots_path):
     plt.close()
 
 
-def plot_final_test_robustness(logs_path, plots_path):
-    path = os.path.join(plots_path, f"final_state.png")
-    dataframe = pd.read_csv(os.path.join(logs_path, f"final_state.csv"))
+def plot_test_end_condition(logs_path, plots_path):
+    path = os.path.join(plots_path, 'end_conditions.png')
+    dataframe = pd.read_csv(os.path.join(logs_path, 'end_conditions.csv'))
 
     # Map the 'End_Condition' to the corresponding colors
     colors = dataframe['End_Condition'].map(end_conditions_color_dict)
@@ -85,13 +87,4 @@ def plot_final_test_robustness(logs_path, plots_path):
     plt.ylabel('Reward')
     plt.title("Final Robustness per episode")
     plt.savefig(path)
-    plt.close()
-
-def plot_test_rewards(dataframe,plots_path,run):
-
-    plt.plot(dataframe[dataframe['Run']==run]['Step'],dataframe[dataframe['Run']==run]['Reward'])
-    plt.xlabel('Step')
-    plt.ylabel("Reward")
-    plt.title(f"Reward per Step at run {run}")
-    plt.savefig(plots_path)
     plt.close()

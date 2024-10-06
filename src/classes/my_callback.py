@@ -11,7 +11,7 @@ class MyCallback(BaseCallback):
         self.logs_path=logs_path
 
         self.rewards_log_path=os.path.join(self.logs_path,'rewards.csv')
-        self.final_state_log_path=os.path.join(self.logs_path,'final_state.csv')
+        self.final_state_log_path=os.path.join(self.logs_path,'end_conditions.csv')
 
         write_to_csv(self.rewards_log_path,['Environment','Episode','Step','Reward'],'w')
         write_to_csv(self.final_state_log_path,['Environment','Episode','Reward','End_Condition'],'w')        
