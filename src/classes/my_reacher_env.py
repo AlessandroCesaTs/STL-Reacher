@@ -31,8 +31,8 @@ class MyReacherEnv(gym.Env):
         self.min_distance=0.1
 
         self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
+        self.necessary_distance= self.sphere_radius/2
         self.min_distances=0.1
-        self.soft_distance=0.05
         self.max_iterations_to_check_point=500
 
         self.steps=0
@@ -65,11 +65,11 @@ class MyReacherEnv(gym.Env):
         with open(os.path.join(self.output_path,'setting.pkl'), 'rb') as f:
             setting = pickle.load(f)
         self.starting_point=setting['starting_point']
-        initial_pose=setting['initial_pose']
+        self.initial_pose=setting['initial_pose']
         self.goal=setting['goal']
         self.avoid=setting['avoid']
         self.flatten_points=np.concatenate([self.goal,self.avoid])
-        self.robot.set(initial_pose)
+        self.robot.set(self.initial_pose)
 
         if self.video_mode:
             self.set_and_move_graphic_balls()
@@ -77,7 +77,7 @@ class MyReacherEnv(gym.Env):
 
     def new_start_goal_avoid(self):
 
-        self.starting_point,initial_pose=self.get_reachable_point()
+        self.starting_point,self.initial_pose=self.get_reachable_point()
         
         points_found=False
         while not points_found:
@@ -101,18 +101,22 @@ class MyReacherEnv(gym.Env):
         if self.video_mode:
             self.set_and_move_graphic_balls()
         
-        self.robot.set(initial_pose)
+        self.robot.set(self.initial_pose)
         if not self.change_target:
-            setting={'starting_point':self.starting_point, 'initial_pose':initial_pose,'goal':self.goal,'avoid':self.avoid}
+            setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
             with open(os.path.join(self.output_path,'setting.pkl'),'wb') as f:
                 pickle.dump(setting,f)
 
     
     def reset(self,**kwargs):
+
+        
         self.steps=0
         
         if self.change_target:
             self.new_start_goal_avoid()
+        else:
+            self.robot.set(self.initial_pose)
 
         self.evaluator.reset_signals()
         self.reach_evaluator.reset_signals()
@@ -174,7 +178,6 @@ class MyReacherEnv(gym.Env):
         self.collision_evaluator.append_signals(signals)
 
         reward=self.evaluating_function(0)
-
         
         info={'episode_number':self.episodes,'step':self.steps,'distances':distance_from_goal}            
         
@@ -186,6 +189,9 @@ class MyReacherEnv(gym.Env):
                         end_condition='reach_stay_no_collision'
                     else:
                         end_condition='reach_no_stay_no_collision'
+                        situation={'signals':self.evaluator.signals,'reward':reward,'reach':self.reach_evaluating_function(0),'stay':self.stay_evaluating_function(0),'collision':self.collision_evaluating_function(0)}
+                        with open(os.path.join(self.output_path,'situation.pkl'),'wb') as f:
+                            pickle.dump(situation,f)
                 else:
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_collision'
@@ -264,13 +270,12 @@ class MyReacherEnv(gym.Env):
         while not reachable:
             point=self.rhis.samplePoint()
             reachable, joints_positions_velocities = self.is_reachable(point)
-        self.robot.set(np.zeros(10))
         return point,joints_positions_velocities
 
     def is_reachable(self, point):
         distance=np.inf
         iter=0
-        while distance>self.sphere_radius and iter<self.max_iterations_to_check_point:
+        while distance>self.necessary_distance and iter<self.max_iterations_to_check_point:
             joints_positions=p.calculateInverseKinematics(bodyIndex=1, 
                                         endEffectorLinkIndex=13, 
                                         targetPosition=point)

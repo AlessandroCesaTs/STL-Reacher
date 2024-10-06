@@ -23,7 +23,7 @@ def plot_train_rewards(logs_path,plots_path):
     plt.xlabel('Episode')
     plt.ylabel("Mean Reward")
     plt.title("Mean Reward per Episode")
-    plt.savefig(plots_path)
+    plt.savefig(path)
     plt.close()
 
 
