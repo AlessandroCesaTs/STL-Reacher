@@ -21,7 +21,7 @@ if i_am_on_slurm; then
     test_runs=5
 else
     max_steps=10
-    test_runs=1
+    test_runs=2
 fi
 
 source bash_scripts/slurm_utils.sh  #source srun_if_on_slurm wich returns srun if i'm on a slurm environment

@@ -36,11 +36,9 @@ class Trainer:
         os.makedirs(test_logs_path, exist_ok=True)
         os.makedirs(videos_path, exist_ok=True)
 
-        rewards_log_path=os.path.join(test_logs_path,'rewards.csv')
-        final_state_log_path=os.path.join(test_logs_path,'final_state.csv')
+        end_conditions_log_path=os.path.join(test_logs_path,'end_conditions.csv')
 
-        write_to_csv(rewards_log_path,['Run','Step','Reward'],'w')
-        write_to_csv(final_state_log_path,['Run','Final_State'],'w')
+        write_to_csv(end_conditions_log_path,['Run','Reward','End_Condition'],'w')
 
         for run in range(test_runs):
             observation,info=self.environment.env_method('reset',indices=0)[0] if self.is_vectorized_environment else self.environment.reset()[0]
@@ -52,11 +50,9 @@ class Trainer:
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
                 step=info['step']
 
-                write_to_csv(rewards_log_path,[run,step,reward],'a')
-
                 if terminated or truncated:
-                    final_state=info['final_state']
-                    write_to_csv(final_state_log_path,[run,final_state],'w')
+                    end_condition=info['end_condition']
+                    write_to_csv(end_conditions_log_path,[run,reward,end_condition],'a')
 
                 
             video_path=os.path.join(videos_path,f"video_{run}.avi")

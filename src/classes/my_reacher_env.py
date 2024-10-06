@@ -133,10 +133,8 @@ class MyReacherEnv(gym.Env):
         return observation,reset_info
     
     def set_and_move_graphic_balls(self):
-        for i in range(self.num_of_goals):
-            self.goal_balls[i].changePos(self.goals[i], 4)
-        for i in range(self.num_of_avoids):
-            self.avoid_balls[i].changePos(self.avoids[i], 4)
+        self.goal_ball.changePos(self.goal, 4)
+        self.avoid_ball.changePos(self.avoid, 4)
 
         for _ in range(25):
             self.robot.step()
@@ -239,8 +237,8 @@ class MyReacherEnv(gym.Env):
         self.frames=[]
         self.image_size=(640,480)
         self.fps=5
-        self.goal_balls=Ball(self.urdf_dir,color="green")
-        self.avoid_balls=Ball(self.urdf_dir,color="red")
+        self.goal_ball=Ball(self.urdf_dir,color="green")
+        self.avoid_ball=Ball(self.urdf_dir,color="red")
         self.video_mode=True
 
     def disable_video_mode(self):
