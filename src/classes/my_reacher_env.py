@@ -158,6 +158,9 @@ class MyReacherEnv(gym.Env):
         self.collision_evaluator.append_signals(signals)
 
         reward=self.evaluating_function(0)
+
+        if reward>0 and self.stay_evaluating_function(0)<=0:
+            print(f"Stay is {self.stay_evaluating_function(0)}, collision is {self.collision_evaluating_function(0)}, reward is {reward}")
         
         info={'episode_number':self.episodes,'step':self.steps,'distances':distance_from_goal}            
         
