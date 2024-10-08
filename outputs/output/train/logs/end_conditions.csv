@@ -1,0 +1,3 @@
+Environment,Episode,Reward,End_Condition
+0,0,-0.06314419968519205,no_reach_no_collision
+1,0,-0.08459310609212803,no_reach_no_collision
