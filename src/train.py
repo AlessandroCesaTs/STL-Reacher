@@ -29,12 +29,9 @@ if __name__=="__main__":
     n_steps=args.n_steps
     max_steps=args.max_steps
     n_epochs=args.n_epochs
-    #n_envs=get_num_cpus()
-    n_envs=1
+    n_envs=get_num_cpus()
 
     os.makedirs(output_path,exist_ok=True)
-
-    times_csv_path=os.path.join(output_path,'times.csv')
 
     environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path,'change_target':change_target})
     model = PPO("MlpPolicy", environment,n_steps=n_steps,n_epochs=n_epochs)
@@ -42,6 +39,9 @@ if __name__=="__main__":
     trainer=Trainer(environment,model,output_path)
     
     trainer.train(total_timesteps=total_timesteps)
+
+    if not change_target:
+        environment.env_method("save_setting",os.path.join(output_path,'setting.pkl'),indices=0)
     
     environment.close()
 

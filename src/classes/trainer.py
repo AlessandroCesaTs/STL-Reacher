@@ -24,12 +24,13 @@ class Trainer:
 
     
     def test_single_target(self,test_runs=1):
+        setting_path=os.path.join(self.output_path,'setting.pkl')
         if self.is_vectorized_environment:
             self.environment.env_method("enable_video_mode",indices=0)
-            self.environment.env_method("set_start_goal_avoid_from_file",indices=0)
+            self.environment.env_method("set_start_goal_avoid_from_file",setting_path,indices=0)
         else:
             self.environment.enable_video_mode()
-            self.environment.set_start_goal_avoid_from_file()
+            self.environment.set_start_goal_avoid_from_file(setting_path)
         
         test_logs_path=os.path.join(self.output_path,'test','logs')
         videos_path=os.path.join(self.output_path,'test','videos')

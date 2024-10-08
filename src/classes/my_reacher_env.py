@@ -61,8 +61,8 @@ class MyReacherEnv(gym.Env):
         if not self.change_target:
             self.new_start_goal_avoid()
 
-    def set_start_goal_avoid_from_file(self):
-        with open(os.path.join(self.output_path,'setting.pkl'), 'rb') as f:
+    def set_start_goal_avoid_from_file(self,file):
+        with open(file, 'rb') as f:
             setting = pickle.load(f)
         self.starting_point=setting['starting_point']
         self.initial_pose=setting['initial_pose']
@@ -102,11 +102,11 @@ class MyReacherEnv(gym.Env):
             self.set_and_move_graphic_balls()
         
         self.robot.set(self.initial_pose)
-        if not self.change_target:
-            setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
-            with open(os.path.join(self.output_path,'setting.pkl'),'wb') as f:
-                pickle.dump(setting,f)
 
+    def save_setting(self,setting_path):
+        setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
+        with open(setting_path,'wb') as f:
+            pickle.dump(setting,f)
     
     def reset(self,**kwargs):
 
@@ -189,9 +189,6 @@ class MyReacherEnv(gym.Env):
                         end_condition='reach_stay_no_collision'
                     else:
                         end_condition='reach_no_stay_no_collision'
-                        situation={'signals':self.evaluator.signals,'reward':reward,'reach':self.reach_evaluating_function(0),'stay':self.stay_evaluating_function(0),'collision':self.collision_evaluating_function(0)}
-                        with open(os.path.join(self.output_path,'situation.pkl'),'wb') as f:
-                            pickle.dump(situation,f)
                 else:
                     if self.stay_evaluating_function(0)>0:
                         end_condition='reach_stay_collision'
