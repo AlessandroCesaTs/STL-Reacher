@@ -16,8 +16,8 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,visual=False,output_path=os.getcwd(),change_target=False):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(19,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(5,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(21,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
         self.video_mode=False
