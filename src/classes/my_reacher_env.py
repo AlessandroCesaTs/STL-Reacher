@@ -174,7 +174,7 @@ class MyReacherEnv(gym.Env):
         
         goal_signal=self.sphere_radius-distance_from_goal
         avoid_collision_signal=distance_from_avoid-self.sphere_radius
-        avoid_near_signal=5*(distance_from_avoid-2*self.sphere_radius)
+        avoid_near_signal=2*(distance_from_avoid-2*self.sphere_radius)
 
         signals=np.array([goal_signal,avoid_collision_signal,avoid_near_signal])
         self.evaluator.append_signals(signals)

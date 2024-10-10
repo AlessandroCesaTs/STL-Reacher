@@ -18,7 +18,7 @@ output_path=$(pwd)/outputs/${3:-'output'}
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
 if i_am_on_slurm; then
-    total_timesteps=1152000
+    total_timesteps=1728000
     n_steps=2000
     n_epochs=10
     max_steps=1000
