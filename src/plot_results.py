@@ -2,7 +2,7 @@ import os
 import argparse
 import pandas as pd
 
-from utils.plotting_utils import plot_train_rewards,plot_train_end_condition,plot_test_end_condition
+from utils.plotting_utils import plot_training,plot_training_end,plot_test_end_condition
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
@@ -22,10 +22,9 @@ if __name__=="__main__":
         train_plots_path=os.path.join(output_path,'train','plots')
         os.makedirs(train_plots_path,exist_ok=True)
 
-
-        plot_train_rewards(train_logs_path,train_plots_path)
+        plot_training(train_logs_path,train_plots_path)
         
-        plot_train_end_condition(train_logs_path,train_plots_path)
+        plot_training_end(train_logs_path,train_plots_path)
 
     if plot_test:
 
