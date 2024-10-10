@@ -39,7 +39,7 @@ class Trainer:
 
         end_conditions_log_path=os.path.join(test_logs_path,'end_conditions.csv')
 
-        write_to_csv(end_conditions_log_path,['Run','Reward','End_Condition'],'w')
+        write_to_csv(end_conditions_log_path,['Run','Robustness','End_Condition'],'w')
 
         for run in range(test_runs):
             observation,info=self.environment.env_method('reset',indices=0)[0] if self.is_vectorized_environment else self.environment.reset()[0]
@@ -52,8 +52,9 @@ class Trainer:
                 step=info['step']
 
                 if terminated or truncated:
+                    robustness=info['requirement_robustness']
                     end_condition=info['end_condition']
-                    write_to_csv(end_conditions_log_path,[run,reward,end_condition],'a')
+                    write_to_csv(end_conditions_log_path,[run,robustness,end_condition],'a')
 
                 
             video_path=os.path.join(videos_path,f"video_{run}.avi")

@@ -10,14 +10,15 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-change_target=${1:-'--change-target'}
-output_path=$(pwd)/outputs/${2:-'output'}
+change_target=${1:-'--change_target'}
+hard_reward=${2:-'--hard_reward'}
+output_path=$(pwd)/outputs/${3:-'output'}
 
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
 if i_am_on_slurm; then
-    total_timesteps=1536000
+    total_timesteps=1152000
     n_steps=2000
     n_epochs=10
     max_steps=1000
@@ -32,6 +33,6 @@ source env/bin/activate
 
 
 echo "Start Training"
-srun_if_on_slurm python3 -u src/train.py --total_timesteps=${total_timesteps} --n_steps=${n_steps} --n_epochs=${n_epochs} --max_steps=${max_steps} --output_path=${output_path} ${change_target}
+srun_if_on_slurm python3 -u src/train.py --total_timesteps=${total_timesteps} --n_steps=${n_steps} --n_epochs=${n_epochs} --max_steps=${max_steps} --output_path=${output_path} ${change_target} ${hard_reward}
 
 echo "Job completed"

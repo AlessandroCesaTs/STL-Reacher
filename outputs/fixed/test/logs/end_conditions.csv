@@ -1,6 +1,6 @@
-Run,Reward,End_Condition
-0,0.007249490357454855,reach_stay_no_collision
-1,0.0018892174109586893,reach_stay_no_collision
-2,-0.0028728661466126994,reach_stay_collision
-3,-0.0001479311729554629,reach_stay_collision
-4,0.0024290584426732223,reach_stay_no_collision
+Run,Robustness,End_Condition
+0,0.0016693281066858766,reach_stay_no_collision
+1,0.0015393854577814663,reach_stay_no_collision
+2,-0.007355796696521829,reach_stay_collision
+3,-0.004757913037133155,reach_stay_collision
+4,-0.0016801291976597625,reach_no_stay_no_collision

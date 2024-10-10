@@ -14,7 +14,7 @@ from utils.utils import copy_urdf_directory
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,visual=False,output_path=os.getcwd(),change_target=False):
+    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,output_path=os.getcwd(),change_target=False, hard_reward=False):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(21,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
@@ -26,13 +26,11 @@ class MyReacherEnv(gym.Env):
         self.urdf_dir=copy_urdf_directory(urdf_dir)
         self.rhis = RandomPointInHalfSphere(0,0,0,radius=0.2,min_dist=0.1)
 
-        self.robot = SingleRobot(debug=visual,urdf_dir=self.urdf_dir)
-
-        self.min_distance=0.1
+        self.robot = SingleRobot(urdf_dir=self.urdf_dir)
 
         self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
         self.necessary_distance= self.sphere_radius/2
-        self.min_distances=0.1
+        self.min_distance=0.1
         self.max_iterations_to_check_point=500
 
         self.steps=0
@@ -40,24 +38,28 @@ class MyReacherEnv(gym.Env):
         self.max_steps=max_steps  
         self.episodes=0
 
-        signals=[[],[]]
+        signals=[[],[],[]]
         
+        self.hard_reward=hard_reward
 
         self.reach_formula=["F",0]
         self.stay_formula=["F",["G",0]]
         self.collision_formula=["G",1]
         self.requirement=["and",self.stay_formula,self.collision_formula]
+        self.hard_reward_formula=["and",self.stay_formula,["G",2]]
 
         self.evaluator=STLEvaluator(signals,self.requirement)
         self.reach_evaluator=STLEvaluator(signals,self.reach_formula)
         self.stay_evaluator=STLEvaluator(signals,self.stay_formula)
         self.collision_evaluator=STLEvaluator(signals,self.collision_formula)
+        self.hard_reward_evaluator=STLEvaluator(signals,self.hard_reward_formula)
 
         self.evaluating_function=self.evaluator.apply_formula()
         self.reach_evaluating_function=self.reach_evaluator.apply_formula()
         self.stay_evaluating_function=self.stay_evaluator.apply_formula()
         self.collision_evaluating_function=self.collision_evaluator.apply_formula()
-
+        self.hard_reward_evaluating_function=self.hard_reward_evaluator.apply_formula()
+        
         if not self.change_target:
             self.new_start_goal_avoid()
 
@@ -83,10 +85,10 @@ class MyReacherEnv(gym.Env):
         while not points_found:
             self.goal,_=self.get_reachable_point()
             start_goal_distance=np.linalg.norm(self.starting_point - self.goal)
-            if start_goal_distance<self.min_distances:
+            if start_goal_distance<self.min_distance:
                 points_found=False
             else:
-                alpha_min=self.min_distances/start_goal_distance
+                alpha_min=self.min_distance/start_goal_distance
                 alpha_max=1-alpha_min
                 alpha =  np.random.uniform(alpha_min, alpha_max)
                 self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
@@ -122,11 +124,13 @@ class MyReacherEnv(gym.Env):
         self.reach_evaluator.reset_signals()
         self.stay_evaluator.reset_signals()
         self.collision_evaluator.reset_signals()
+        self.hard_reward_evaluator.reset_signals()
 
         self.evaluating_function=self.evaluator.apply_formula()
         self.reach_evaluating_function=self.reach_evaluator.apply_formula()
         self.stay_evaluating_function=self.stay_evaluator.apply_formula()
         self.collision_evaluating_function=self.collision_evaluator.apply_formula()
+        self.hard_reward_evaluating_function=self.hard_reward_evaluator.apply_formula()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -169,17 +173,24 @@ class MyReacherEnv(gym.Env):
         distance_from_avoid=self.distance_from_avoid()
         
         goal_signal=self.sphere_radius-distance_from_goal
-        avoid_signal=distance_from_avoid-self.sphere_radius
+        avoid_collision_signal=distance_from_avoid-self.sphere_radius
+        avoid_near_signal=5*(distance_from_avoid-2*self.sphere_radius)
 
-        signals=np.array([goal_signal,avoid_signal])
+        signals=np.array([goal_signal,avoid_collision_signal,avoid_near_signal])
         self.evaluator.append_signals(signals)
         self.reach_evaluator.append_signals(signals)
         self.stay_evaluator.append_signals(signals)
         self.collision_evaluator.append_signals(signals)
+        self.hard_reward_evaluator.append_signals(signals)
 
-        reward=self.evaluating_function(0)
+        requirement_robustness=self.evaluating_function(0)
+
+        if self.hard_reward:
+            reward=self.hard_reward_evaluating_function(0)
+        else:
+            reward=requirement_robustness
         
-        info={'episode_number':self.episodes,'step':self.steps,'distances':distance_from_goal}            
+        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':requirement_robustness}            
         
         if self.steps>self.max_steps:
             terminated=True
