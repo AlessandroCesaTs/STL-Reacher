@@ -11,7 +11,7 @@ if i_am_on_slurm; then
     plot_job_id=$(sbatch --dependency=afterok:$test_job_id --output=$(pwd)/outputs/${output_directory}/train/plot.out bash_scripts/plot.sh ${output_directory}| awk '{print $4}')
     echo "Submitted jobs $train_job_id, $test_job_id,$plot_job_id"
 else
-    bash_scripts/train.sh '--no-change_target'
-    bash_scripts/test.sh '--no-change_target'
+    bash_scripts/train.sh '--no-change_target' '--hard_reward'
+    bash_scripts/test.sh '--no-change_target' '--hard_reward'
     bash_scripts/plot.sh 
 fi
