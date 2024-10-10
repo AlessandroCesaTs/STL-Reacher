@@ -35,7 +35,7 @@ if __name__=="__main__":
     trainer=Trainer(environment,model,output_path)
 
     if change_target:
-        pass
+        trainer.test_changing_target(test_runs=test_runs)
     else:
         trainer.test_single_target(test_runs=test_runs)
     

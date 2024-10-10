@@ -63,7 +63,18 @@ class MyReacherEnv(gym.Env):
         if not self.change_target:
             self.new_start_goal_avoid()
 
-    def set_start_goal_avoid_from_file(self,file):
+    def set_setting(self,setting):
+        self.starting_point=setting['starting_point']
+        self.initial_pose=setting['initial_pose']
+        self.goal=setting['goal']
+        self.avoid=setting['avoid']
+        self.flatten_points=np.concatenate([self.goal,self.avoid])
+        self.robot.set(self.initial_pose)
+
+        if self.video_mode:
+            self.set_and_move_graphic_balls()
+    
+    def set_setting_from_file(self,file):
         with open(file, 'rb') as f:
             setting = pickle.load(f)
         self.starting_point=setting['starting_point']
@@ -105,10 +116,13 @@ class MyReacherEnv(gym.Env):
         
         self.robot.set(self.initial_pose)
 
-    def save_setting(self,setting_path):
+    def save_setting_to_file(self,setting_path):
         setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
         with open(setting_path,'wb') as f:
             pickle.dump(setting,f)
+    def get_setting(self):
+        setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
+        return setting
     
     def reset(self,**kwargs):
 
@@ -190,7 +204,7 @@ class MyReacherEnv(gym.Env):
         else:
             reward=requirement_robustness
         
-        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':requirement_robustness}            
+        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':requirement_robustness,'end_effector_position':self.get_position_of_end_effector()}            
         
         if self.steps>self.max_steps:
             terminated=True

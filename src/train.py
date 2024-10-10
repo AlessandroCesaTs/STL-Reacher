@@ -42,7 +42,7 @@ if __name__=="__main__":
     trainer.train(total_timesteps=total_timesteps)
 
     if not change_target:
-        environment.env_method("save_setting",os.path.join(output_path,'setting.pkl'),indices=0)
+        environment.env_method("save_setting_to_file",os.path.join(output_path,'setting.pkl'),indices=0)
     
     environment.close()
 
