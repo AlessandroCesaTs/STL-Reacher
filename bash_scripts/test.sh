@@ -10,7 +10,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-change_target=${1:-'--change-target'}
+change_target=${1:-'--double'}
 hard_reward=${2:-'--hard_reward'}
 output_path=$(pwd)/outputs/${3:-output}
 
@@ -30,6 +30,6 @@ source env/bin/activate
 
 echo "Start Testing"
 
-srun_if_on_slurm python3 src/test.py --num_of_goals=2 --max_steps=${max_steps} --test_runs=${test_runs} --output_path=${output_path} ${change_target} ${hard_reward}
+srun_if_on_slurm python3 src/test.py --num_of_goals=2 --max_steps=${max_steps} --test_runs=${test_runs} --output_path=${output_path} ${double} ${hard_reward}
 
 echo "Done Testing"
