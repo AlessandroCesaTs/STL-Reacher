@@ -15,7 +15,7 @@ if __name__=="__main__":
 
     parser=argparse.ArgumentParser()
     parser.add_argument('--output_path',type=str,default=os.path.join(os.getcwd(),'output'))
-    parser.add_argument('--change_target',action=argparse.BooleanOptionalAction,default=True)
+    parser.add_argument('--double',action=argparse.BooleanOptionalAction,default=True)
     parser.add_argument('--hard_reward',action=argparse.BooleanOptionalAction,default=True)
     parser.add_argument('--total_timesteps',type=int,default=256)
     parser.add_argument('--n_steps',type=int,default=128)
@@ -24,7 +24,7 @@ if __name__=="__main__":
 
     args=parser.parse_args()
     output_path=args.output_path
-    change_target=args.change_target
+    double=args.double
     hard_reward=args.hard_reward
     total_timesteps=args.total_timesteps
     n_steps=args.n_steps
@@ -34,14 +34,14 @@ if __name__=="__main__":
 
     os.makedirs(output_path,exist_ok=True)
 
-    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path,'change_target':change_target,'hard_reward':hard_reward})
+    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path,'double':double,'hard_reward':hard_reward})
     model = PPO("MlpPolicy", environment,n_steps=n_steps,n_epochs=n_epochs)
 
     trainer=Trainer(environment,model,output_path)
     
     trainer.train(total_timesteps=total_timesteps)
 
-    if not change_target:
+    if not double:
         environment.env_method("save_setting_to_file",os.path.join(output_path,'setting.pkl'),indices=0)
     
     environment.close()

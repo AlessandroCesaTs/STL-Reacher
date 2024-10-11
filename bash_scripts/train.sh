@@ -10,7 +10,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-change_target=${1:-'--change_target'}
+change_target=${1:-'--double'}
 hard_reward=${2:-'--hard_reward'}
 output_path=$(pwd)/outputs/${3:-'output'}
 
@@ -33,6 +33,6 @@ source env/bin/activate
 
 
 echo "Start Training"
-srun_if_on_slurm python3 -u src/train.py --total_timesteps=${total_timesteps} --n_steps=${n_steps} --n_epochs=${n_epochs} --max_steps=${max_steps} --output_path=${output_path} ${change_target} ${hard_reward}
+srun_if_on_slurm python3 -u src/train.py --total_timesteps=${total_timesteps} --n_steps=${n_steps} --n_epochs=${n_epochs} --max_steps=${max_steps} --output_path=${output_path} ${double} ${hard_reward}
 
 echo "Job completed"

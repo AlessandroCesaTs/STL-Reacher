@@ -37,7 +37,7 @@ class MyReacherEnv(gym.Env):
         self.start_computing_robustness_from=0
         self.max_steps=max_steps  
         self.episodes=0
-        self.goal=0
+        
 
         self.hard_reward=hard_reward
 
@@ -48,7 +48,18 @@ class MyReacherEnv(gym.Env):
             setting_2=self.get_setting()
 
             self.goal_1=setting_1['goal']
-            self.avoid_1=setting_
+            self.avoid_1=setting_1['avoid']
+            self.starting_point_1=setting_1['starting_point']
+            self.initial_pose_1=setting_1['initial_pose']
+
+            self.goal_2=setting_2['goal']
+            self.avoid_2=setting_2['avoid']
+            self.starting_point_2=setting_2['starting_point']
+            self.initial_pose_2=setting_2['initial_pose']
+
+            self.goal=0
+            self.robot.set(self.initial_pose_1)
+            
 
         else:
             self.new_start_goal_avoid()
@@ -70,6 +81,7 @@ class MyReacherEnv(gym.Env):
             requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,eventually_reach_1_and_eventually_reach_2_formula]
 
             self.requirement_evaluator=STLEvaluator(signals,requirement_formula)
+            self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
 
         else: 
             signals=[[],[],[]]
@@ -164,7 +176,7 @@ class MyReacherEnv(gym.Env):
         if self.double:
             self.requirement_evaluator.reset_signals()
             
-            self.requirement_evaluator.apply_formula()
+            self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
         else:
             self.evaluator.reset_signals()
             self.reach_evaluator.reset_signals()
@@ -218,6 +230,43 @@ class MyReacherEnv(gym.Env):
             return self._getReward_single()
 
             
+    def _getReward_double(self):
+        terminated=False
+        truncated=False
+
+        distance_from_goal_1=self.distance_from_goal_1()
+        distance_from_goal_2=self.distance_from_avoid_1()
+        distance_from_avoid_1=self.distance_from_avoid_1()
+        distance_from_avoid_2=self.distance_from_avoid_2()
+
+        goal_signal_1=self.sphere_radius-distance_from_goal_1
+        avoid_collision_signal_1=distance_from_avoid_1-self.sphere_radius
+        avoid_near_signal_1=1.5*(distance_from_avoid_1-2*self.sphere_radius)
+
+        goal_signal_2=self.sphere_radius-distance_from_goal_2
+        avoid_collision_signal_2=distance_from_avoid_2-self.sphere_radius
+        avoid_near_signal_2=1.5*(distance_from_avoid_2-2*self.sphere_radius)
+
+        signals=np.array([goal_signal_1,avoid_collision_signal_1,avoid_near_signal_1,goal_signal_2,avoid_collision_signal_2,avoid_near_signal_2])
+
+        self.requirement_evaluator.append_signals(signals)
+        reward=self.requirement_evaluating_function(0)
+
+
+        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':reward,'end_effector_position':self.get_position_of_end_effector()}
+
+        if self.steps>self.max_steps:
+            terminated=True
+            if reward>0:
+                end_condition='good'
+            else:
+                end_condition='bad'
+
+        if (terminated or truncated):
+            info['end_condition']=end_condition
+            self.episodes+=1
+        
+        return reward, terminated, truncated, info
 
     def _getReward_single(self):
         terminated=False
@@ -322,8 +371,16 @@ class MyReacherEnv(gym.Env):
         self.robot.close()
     def distance_from_goal(self):
         return np.linalg.norm(self.goal-self.get_position_of_end_effector())
+    def distance_from_goal_1(self):
+        return np.linalg.norm(self.goal_1-self.get_position_of_end_effector())
+    def distance_from_goal_2(self):
+        return np.linalg.norm(self.goal_2-self.get_position_of_end_effector())
     def distance_from_avoid(self):
         return np.linalg.norm(self.avoid-self.get_position_of_end_effector())
+    def distance_from_avoid_1(self):
+        return np.linalg.norm(self.avoid_1-self.get_position_of_end_effector())
+    def distance_from_avoid_2(self):
+        return np.linalg.norm(self.avoid_2-self.get_position_of_end_effector())
     def get_position_of_end_effector(self):
         return np.array(p.getLinkState(self.robot.id,13)[0])
 
