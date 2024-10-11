@@ -1,0 +1,6 @@
+Run,Robustness,End_Condition
+0,-0.013544727689895578,reach_stay_collision
+1,0.01154120741210413,reach_stay_no_collision
+2,0.010040611505370122,reach_stay_no_collision
+3,0.003713262543021137,reach_stay_no_collision
+4,0.00745119577460949,reach_stay_no_collision

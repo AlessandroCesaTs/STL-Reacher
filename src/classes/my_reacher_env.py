@@ -16,7 +16,7 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class MyReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,output_path=os.getcwd(),change_target=False, hard_reward=False):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(21,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(15,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
@@ -68,7 +68,7 @@ class MyReacherEnv(gym.Env):
         self.initial_pose=setting['initial_pose']
         self.goal=setting['goal']
         self.avoid=setting['avoid']
-        self.flatten_points=np.concatenate([self.goal,self.avoid])
+        #self.flatten_points=np.concatenate([self.goal,self.avoid])
         self.robot.set(self.initial_pose)
 
         if self.video_mode:
@@ -81,7 +81,7 @@ class MyReacherEnv(gym.Env):
         self.initial_pose=setting['initial_pose']
         self.goal=setting['goal']
         self.avoid=setting['avoid']
-        self.flatten_points=np.concatenate([self.goal,self.avoid])
+        #self.flatten_points=np.concatenate([self.goal,self.avoid])
         self.robot.set(self.initial_pose)
 
         if self.video_mode:
@@ -109,7 +109,7 @@ class MyReacherEnv(gym.Env):
                 else:
                     points_found=False
 
-        self.flatten_points=np.concatenate([self.goal,self.avoid])
+        #self.flatten_points=np.concatenate([self.goal,self.avoid])
 
         if self.video_mode:
             self.set_and_move_graphic_balls()
@@ -188,7 +188,7 @@ class MyReacherEnv(gym.Env):
         
         goal_signal=self.sphere_radius-distance_from_goal
         avoid_collision_signal=distance_from_avoid-self.sphere_radius
-        avoid_near_signal=distance_from_avoid-2*self.sphere_radius
+        avoid_near_signal=1.5*(distance_from_avoid-2*self.sphere_radius)
 
         signals=np.array([goal_signal,avoid_collision_signal,avoid_near_signal])
         self.evaluator.append_signals(signals)
@@ -275,7 +275,7 @@ class MyReacherEnv(gym.Env):
     def _get_obs(self):
         observation=self.robot.observe()
         position_of_end_effector=self.get_position_of_end_effector()
-        obs=np.concatenate([observation,position_of_end_effector,self.flatten_points])
+        obs=np.concatenate([observation,position_of_end_effector])
         return obs
     
     def close(self):
