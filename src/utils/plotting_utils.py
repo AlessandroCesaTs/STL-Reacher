@@ -3,10 +3,13 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 
-end_conditions_color_dict={'reach_stay_no_collision':'green','reach_no_stay_no_collision':'yellow',
+single_end_conditions_color_dict={'reach_stay_no_collision':'green','reach_no_stay_no_collision':'yellow',
                             'reach_stay_collision':'brown','reach_no_stay_collision':'red',
                             'no_reach_no_collision':'gray',
                             'no_reach_collision':'black'}
+
+double_end_conditions_color_dict={'perfect':'green','first_part_completed_but_not_second':'red',
+                            'no_part_completed':'black'}
 
 def plot_training(logs_path,plots_path):
     dataframe = pd.read_csv(os.path.join(logs_path, f"training.csv"))
@@ -36,7 +39,7 @@ def plot_training(logs_path,plots_path):
     plt.close()
 
 
-def plot_training_end(logs_path, plots_path):
+def plot_training_end(logs_path, plots_path,double=False):
     dataframe = pd.read_csv(os.path.join(logs_path, 'end_conditions.csv'))
     robustness_path = os.path.join(plots_path, 'end_robustness.png')
 
@@ -44,11 +47,14 @@ def plot_training_end(logs_path, plots_path):
     dataframe['Total_Episode'] = dataframe['Episode'] * num_of_envs + dataframe['Environment']
 
     # Map the 'End_Condition' to the corresponding colors
-    colors = dataframe['End_Condition'].map(end_conditions_color_dict)
+    if double:
+        colors = dataframe['End_Condition'].map(double_end_conditions_color_dict)
+    else:
+        colors = dataframe['End_Condition'].map(single_end_conditions_color_dict)
 
     plt.scatter(dataframe['Total_Episode'], dataframe["Robustness"], color=colors)
 
-    legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in end_conditions_color_dict.items()]
+    legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in single_end_conditions_color_dict.items()]
 
     plt.legend(handles=legend_elements, loc="lower right", title="End Condition")
 
@@ -58,25 +64,19 @@ def plot_training_end(logs_path, plots_path):
     plt.savefig(robustness_path)
     plt.close()
 
-def plot_test_end_condition(logs_path, plots_path):
+def plot_test_end_condition(logs_path, plots_path,double=False):
     path = os.path.join(plots_path, 'end_conditions.png')
     dataframe = pd.read_csv(os.path.join(logs_path, 'end_conditions.csv'))
 
     # Map the 'End_Condition' to the corresponding colors
-    colors = dataframe['End_Condition'].map(end_conditions_color_dict)
+    if double:
+        colors = dataframe['End_Condition'].map(double_end_conditions_color_dict)
+    else:
+        colors = dataframe['End_Condition'].map(single_end_conditions_color_dict)
 
     plt.scatter(dataframe['Run'], dataframe["Robustness"], color=colors)
 
-    # Set up a custom legend
-    legend_elements = [
-        Line2D([0], [0], marker='o', color='w', label='reach_stay_no_collision', markerfacecolor='green', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10),
-        Line2D([0], [0], marker='o', color='w', label='not_satisfied', markerfacecolor='red', markersize=10)
-    ]
-    legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in end_conditions_color_dict.items()]
+    legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in single_end_conditions_color_dict.items()]
     
     plt.legend(handles=legend_elements, loc="lower right", title="End Condition")
 

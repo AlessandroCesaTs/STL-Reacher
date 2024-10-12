@@ -9,11 +9,13 @@ if __name__=="__main__":
     parser.add_argument('--output_path',type=str,default=os.path.join(os.getcwd(),'output'))
     parser.add_argument('--plot_train',action=argparse.BooleanOptionalAction,default=True)
     parser.add_argument('--plot_test',action=argparse.BooleanOptionalAction,default=True)
+    parser.add_argument('--double',action=argparse.BooleanOptionalAction,default=True)
 
     args=parser.parse_args()
     output_path=args.output_path
     plot_train=args.plot_train
     plot_test=args.plot_test
+    double=args.double
 
     if plot_train:
 
@@ -24,7 +26,7 @@ if __name__=="__main__":
 
         plot_training(train_logs_path,train_plots_path)
         
-        plot_training_end(train_logs_path,train_plots_path)
+        plot_training_end(train_logs_path,train_plots_path,double)
 
     if plot_test:
 
@@ -33,7 +35,7 @@ if __name__=="__main__":
         test_plots_path=os.path.join(output_path,'test','plots')
         os.makedirs(test_plots_path,exist_ok=True)
         
-        plot_test_end_condition(test_logs_path,test_plots_path)
+        plot_test_end_condition(test_logs_path,test_plots_path,double)
 
 
 
