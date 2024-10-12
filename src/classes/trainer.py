@@ -64,7 +64,9 @@ class Trainer:
             else:
                 self.environment.save_video(video_path)
 
-    def test_changing_target(self,test_runs=1):
+    def test_double_target(self,test_runs=1):
+        setting_1_path=os.path.join(self.output_path,'setting_1.pkl')
+        setting_2_path=os.path.join(self.output_path,'setting_1.pkl')
         if self.is_vectorized_environment:
             self.environment.env_method("enable_video_mode",indices=0)
         else:

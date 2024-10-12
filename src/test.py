@@ -4,7 +4,8 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from classes.trainer import Trainer
-from classes.my_reacher_env import MyReacherEnv
+from classes.single_reacher_env import SingleReacherEnv
+from classes.double_reacher_env import DoubleReacherEnv
 from utils.utils import get_num_cpus
 
 if __name__=="__main__":
@@ -25,10 +26,14 @@ if __name__=="__main__":
     test_runs=args.test_runs
     num_of_goals=args.num_of_goals
     n_envs=get_num_cpus()
+   
 
     model_path=os.path.join(output_path,'model')
 
-    environment=make_vec_env(MyReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path,'double':double,'hard_reward':hard_reward})
+    if double:
+        environment=make_vec_env(DoubleReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path})
+    else:
+        environment=make_vec_env(SingleReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path,'hard_reward':hard_reward})
         
     model=PPO.load(model_path,environment)
 

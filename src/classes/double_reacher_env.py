@@ -13,15 +13,14 @@ from utils.utils import copy_urdf_directory
 
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
-class MyReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,output_path=os.getcwd(),double=False, hard_reward=False):
+class DoubleReacherEnv(gym.Env):
+    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(15,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
         self.video_mode=False
-        self.double=double
 
         self.urdf_dir=copy_urdf_directory(urdf_dir)
         self.rhis = RandomPointInHalfSphere(0,0,0,radius=0.2,min_dist=0.1)
@@ -39,70 +38,51 @@ class MyReacherEnv(gym.Env):
         self.episodes=0
         
 
-        self.hard_reward=hard_reward
+        self.new_start_goal_avoid()
+        setting_1=self.get_setting()
+        self.new_start_goal_avoid()
+        setting_2=self.get_setting()
 
-        if self.double:
-            self.new_start_goal_avoid()
-            setting_1=self.get_setting()
-            self.new_start_goal_avoid()
-            setting_2=self.get_setting()
+        self.goal_1=setting_1['goal']
+        self.avoid_1=setting_1['avoid']
+        self.starting_point_1=setting_1['starting_point']
+        self.initial_pose_1=setting_1['initial_pose']
 
-            self.goal_1=setting_1['goal']
-            self.avoid_1=setting_1['avoid']
-            self.starting_point_1=setting_1['starting_point']
-            self.initial_pose_1=setting_1['initial_pose']
+        self.goal_2=setting_2['goal']
+        self.avoid_2=setting_2['avoid']
+        self.starting_point_2=setting_2['starting_point']
+        self.initial_pose_2=setting_2['initial_pose']
 
-            self.goal_2=setting_2['goal']
-            self.avoid_2=setting_2['avoid']
-            self.starting_point_2=setting_2['starting_point']
-            self.initial_pose_2=setting_2['initial_pose']
+        self.goal=0
+        self.robot.set(self.initial_pose_1)
 
-            self.goal=0
-            self.robot.set(self.initial_pose_1)
-            
+        signals=[[],[],[],[],[],[]]
 
-        else:
-            self.new_start_goal_avoid()
+        reach_1_formula=["F",0]
+        reach_2_formula=["F",["G",3]]
+
+        eventually_reach_1_and_eventually_reach_2_formula=["F",["and",0,["F",["G",3]]]]
+        globally_avoid_formula=["G",["and",1,3]]
+        globally_avoid_hard_formula=["G",["and",2,4]]
+
+        first_part_formula=["and",reach_1_formula,globally_avoid_formula]
+        second_part_formula=["and",reach_2_formula,globally_avoid_formula]
 
 
-        if self.double:
-            signals=[[],[],[],[],[],[]]
+        requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_hard_formula]
+        reward_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_hard_formula]
 
-            reach_1_formula=["F",0]
-            collision_1_formula=["G",1]
-            collision_1__hard_formula=["G",2]
-            reach_2_formula=["F",3]
-            collision_2_formula=["G",4]
-            collision_2_hard_formula=["G",4]
+        self.requirement_evaluator=STLEvaluator(signals,requirement_formula)
+        self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
+        
+        self.reward_evaluator=STLEvaluator(signals,reward_formula)
+        self.reward_evaluating_function=self.reward_evaluator.apply_formula()
+        
+        self.first_part_evaluator=STLEvaluator(signals,first_part_formula)
+        self.first_part_evaluating_function=self.first_part_evaluator.apply_formula()
 
-            eventually_reach_1_and_eventually_reach_2_formula=["F",["and",0,["F",3]]]
-            globally_avoid_formula=["G",["and",1,3]]
-
-            requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,eventually_reach_1_and_eventually_reach_2_formula]
-
-            self.requirement_evaluator=STLEvaluator(signals,requirement_formula)
-            self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
-
-        else: 
-            signals=[[],[],[]]
-
-            self.reach_formula=["F",0]
-            self.stay_formula=["F",["G",0]]
-            self.collision_formula=["G",1]
-            self.requirement=["and",self.stay_formula,self.collision_formula]
-            self.hard_reward_formula=["and",self.stay_formula,["G",2]]
-
-            self.evaluator=STLEvaluator(signals,self.requirement)
-            self.reach_evaluator=STLEvaluator(signals,self.reach_formula)
-            self.stay_evaluator=STLEvaluator(signals,self.stay_formula)
-            self.collision_evaluator=STLEvaluator(signals,self.collision_formula)
-            self.hard_reward_evaluator=STLEvaluator(signals,self.hard_reward_formula)
-
-            self.evaluating_function=self.evaluator.apply_formula()
-            self.reach_evaluating_function=self.reach_evaluator.apply_formula()
-            self.stay_evaluating_function=self.stay_evaluator.apply_formula()
-            self.collision_evaluating_function=self.collision_evaluator.apply_formula()
-            self.hard_reward_evaluating_function=self.hard_reward_evaluator.apply_formula()
+        self.second_part_evaluator=STLEvaluator(signals,second_part_formula)
+        self.second_part_evaluating_function=self.second_part_evaluator.apply_formula()
         
 
     def set_setting(self,setting):
@@ -123,12 +103,10 @@ class MyReacherEnv(gym.Env):
         self.initial_pose=setting['initial_pose']
         self.goal=setting['goal']
         self.avoid=setting['avoid']
-        #self.flatten_points=np.concatenate([self.goal,self.avoid])
         self.robot.set(self.initial_pose)
 
         if self.video_mode:
             self.set_and_move_graphic_balls()
-
 
     def new_start_goal_avoid(self):
 
@@ -167,28 +145,21 @@ class MyReacherEnv(gym.Env):
         return setting
     
     def reset(self,**kwargs):
-
         
         self.steps=0
         
         self.robot.set(self.initial_pose)
 
-        if self.double:
-            self.requirement_evaluator.reset_signals()
-            
-            self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
-        else:
-            self.evaluator.reset_signals()
-            self.reach_evaluator.reset_signals()
-            self.stay_evaluator.reset_signals()
-            self.collision_evaluator.reset_signals()
-            self.hard_reward_evaluator.reset_signals()
+        self.requirement_evaluator.reset_signals()
+        self.reward_evaluator.reset_signals()
+        self.first_part_evaluator.reset_signals()  
+        self.second_part_evaluator.reset_signals()
+        
+        self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
+        self.reward_evaluating_function=self.reward_evaluator.apply_formula()
+        self.first_part_evaluating_function=self.first_part_evaluator.apply_formula()
+        self.second_part_evaluating_function=self.second_part_evaluator.apply_formula()
 
-            self.evaluating_function=self.evaluator.apply_formula()
-            self.reach_evaluating_function=self.reach_evaluator.apply_formula()
-            self.stay_evaluating_function=self.stay_evaluator.apply_formula()
-            self.collision_evaluating_function=self.collision_evaluator.apply_formula()
-            self.hard_reward_evaluating_function=self.hard_reward_evaluator.apply_formula()
 
         observation=self._get_obs()
         reset_info={} #needed for stable baseline
@@ -222,15 +193,8 @@ class MyReacherEnv(gym.Env):
             self.frames.append(image)
         
         return obs,reward,terminated,truncated,info
-    
-    def _getReward(self):
-        if self.double:
-            return self._getReward_double()
-        else:
-            return self._getReward_single()
-
             
-    def _getReward_double(self):
+    def _getReward(self):
         terminated=False
         truncated=False
 
@@ -250,74 +214,30 @@ class MyReacherEnv(gym.Env):
         signals=np.array([goal_signal_1,avoid_collision_signal_1,avoid_near_signal_1,goal_signal_2,avoid_collision_signal_2,avoid_near_signal_2])
 
         self.requirement_evaluator.append_signals(signals)
-        reward=self.requirement_evaluating_function(0)
+        self.reward_evaluator.append_signals(signals)
+        self.first_part_evaluator.append_signals(signals)
+        self.second_part_evaluator.append_signals(signals)
+        
+        robustness=self.requirement_evaluating_function(0)
+        reward=self.reward_evaluating_function(0)
+        first_part=self.first_part_evaluating_function(0)
+        second_part=self.second_part_evaluating_function(0)
 
-
-        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':reward,'end_effector_position':self.get_position_of_end_effector()}
+        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':robustness}
 
         if self.steps>self.max_steps:
             terminated=True
-            if reward>0:
-                end_condition='good'
+            if robustness>0:
+                end_condition='perfect'
+            elif self.first_part_evaluating_function(0)>0:
+                end_condition='first_part_completed_but_not_second'
             else:
-                end_condition='bad'
+                end_condition='no_part_completed'
 
         if (terminated or truncated):
             info['end_condition']=end_condition
             self.episodes+=1
         
-        return reward, terminated, truncated, info
-
-    def _getReward_single(self):
-        terminated=False
-        truncated = False
-
-        distance_from_goal=self.distance_from_goal()
-        distance_from_avoid=self.distance_from_avoid()
-        
-        goal_signal=self.sphere_radius-distance_from_goal
-        avoid_collision_signal=distance_from_avoid-self.sphere_radius
-        avoid_near_signal=1.5*(distance_from_avoid-2*self.sphere_radius)
-
-        signals=np.array([goal_signal,avoid_collision_signal,avoid_near_signal])
-        self.evaluator.append_signals(signals)
-        self.reach_evaluator.append_signals(signals)
-        self.stay_evaluator.append_signals(signals)
-        self.collision_evaluator.append_signals(signals)
-        self.hard_reward_evaluator.append_signals(signals)
-
-        requirement_robustness=self.evaluating_function(0)
-
-        if self.hard_reward:
-            reward=self.hard_reward_evaluating_function(0)
-        else:
-            reward=requirement_robustness
-        
-        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':requirement_robustness,'end_effector_position':self.get_position_of_end_effector()}            
-        
-        if self.steps>self.max_steps:
-            terminated=True
-            if self.reach_evaluating_function(0)>0:
-                if self.collision_evaluating_function(0)>0:
-                    if self.stay_evaluating_function(0)>0:
-                        end_condition='reach_stay_no_collision'
-                    else:
-                        end_condition='reach_no_stay_no_collision'
-                else:
-                    if self.stay_evaluating_function(0)>0:
-                        end_condition='reach_stay_collision'
-                    else:
-                        end_condition='reach_no_stay_collision'
-            else:
-                if self.collision_evaluating_function(0)>0:
-                    end_condition='no_reach_no_collision'
-                else:
-                    end_condition='no_reach_collision'
-
-        if terminated or truncated:
-            info['end_condition']=end_condition
-            self.episodes+=1
-
         return reward, terminated, truncated, info
 
     def _capture_image(self):
