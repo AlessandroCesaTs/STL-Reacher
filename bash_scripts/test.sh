@@ -10,7 +10,7 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-change_target=${1:-'--double'}
+double=${1:-'--double'}
 hard_reward=${2:-'--hard_reward'}
 output_path=$(pwd)/outputs/${3:-output}
 

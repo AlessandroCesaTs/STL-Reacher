@@ -40,8 +40,8 @@ if __name__=="__main__":
     trainer=Trainer(environment,model,output_path)
 
     if double:
-        trainer.test_changing_target(test_runs=test_runs)
+        trainer.test_double(test_runs=test_runs)
     else:
-        trainer.test_single_target(test_runs=test_runs)
+        trainer.test_single(test_runs=test_runs)
     
     environment.close()

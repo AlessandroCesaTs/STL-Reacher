@@ -36,25 +36,10 @@ class DoubleReacherEnv(gym.Env):
         self.start_computing_robustness_from=0
         self.max_steps=max_steps  
         self.episodes=0
-        
-
         self.new_start_goal_avoid()
-        setting_1=self.get_setting()
-        self.new_start_goal_avoid()
-        setting_2=self.get_setting()
-
-        self.goal_1=setting_1['goal']
-        self.avoid_1=setting_1['avoid']
-        self.starting_point_1=setting_1['starting_point']
-        self.initial_pose_1=setting_1['initial_pose']
-
-        self.goal_2=setting_2['goal']
-        self.avoid_2=setting_2['avoid']
-        self.starting_point_2=setting_2['starting_point']
-        self.initial_pose_2=setting_2['initial_pose']
 
         self.goal=0
-        self.robot.set(self.initial_pose_1)
+        self.robot.set(self.initial_pose)
 
         signals=[[],[],[],[],[],[]]
 
@@ -69,7 +54,7 @@ class DoubleReacherEnv(gym.Env):
         second_part_formula=["and",reach_2_formula,globally_avoid_formula]
 
 
-        requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_hard_formula]
+        requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_formula]
         reward_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_hard_formula]
 
         self.requirement_evaluator=STLEvaluator(signals,requirement_formula)
@@ -85,64 +70,63 @@ class DoubleReacherEnv(gym.Env):
         self.second_part_evaluating_function=self.second_part_evaluator.apply_formula()
         
 
-    def set_setting(self,setting):
-        self.starting_point=setting['starting_point']
-        self.initial_pose=setting['initial_pose']
-        self.goal=setting['goal']
-        self.avoid=setting['avoid']
-        #self.flatten_points=np.concatenate([self.goal,self.avoid])
-        self.robot.set(self.initial_pose)
-
-        if self.video_mode:
-            self.set_and_move_graphic_balls()
-    
     def set_setting_from_file(self,file):
         with open(file, 'rb') as f:
             setting = pickle.load(f)
-        self.starting_point=setting['starting_point']
         self.initial_pose=setting['initial_pose']
-        self.goal=setting['goal']
-        self.avoid=setting['avoid']
+        self.goal_1=setting['goal_1']
+        self.avoid_1=setting['avoid_1']
+        self.goal_2=setting['goal_2']
+        self.avoid_2=setting['avoid_2']
         self.robot.set(self.initial_pose)
 
         if self.video_mode:
             self.set_and_move_graphic_balls()
 
-    def new_start_goal_avoid(self):
 
-        self.starting_point,self.initial_pose=self.get_reachable_point()
+    def new_start_goal_avoid(self):
+        starting_point,self.initial_pose=self.get_reachable_point()
         
         points_found=False
         while not points_found:
-            self.goal,_=self.get_reachable_point()
-            start_goal_distance=np.linalg.norm(self.starting_point - self.goal)
+            self.goal_1,_=self.get_reachable_point()
+            start_goal_distance=np.linalg.norm(starting_point - self.goal_1)
             if start_goal_distance<self.min_distance:
                 points_found=False
             else:
                 alpha_min=self.min_distance/start_goal_distance
                 alpha_max=1-alpha_min
                 alpha =  np.random.uniform(alpha_min, alpha_max)
-                self.avoid=(1-alpha)*self.starting_point+alpha*self.goal
-                avoid_is_reachable,_=self.is_reachable(self.avoid)
+                self.avoid_1=(1-alpha)*starting_point+alpha*self.goal_1
+                avoid_is_reachable,_=self.is_reachable(self.avoid_1)
                 if avoid_is_reachable:
-                    points_found=True
+                    self.goal_2,_=self.get_reachable_point()
+                    start_goal_distance=np.linalg.norm(self.goal_1 - self.goal_2)
+                    if start_goal_distance<self.min_distance:
+                        points_found=False
+                    else:
+                        alpha_min=self.min_distance/start_goal_distance
+                        alpha_max=1-alpha_min
+                        alpha =  np.random.uniform(alpha_min, alpha_max)
+                        self.avoid_2=(1-alpha)*self.goal_1+alpha*self.goal_2
+                        avoid_2_is_reachable,_=self.is_reachable(self.avoid_2)
+                        if avoid_2_is_reachable:
+                            points_found=True
+                        else:
+                            points_found=False
                 else:
                     points_found=False
-
-        #self.flatten_points=np.concatenate([self.goal,self.avoid])
 
         if self.video_mode:
             self.set_and_move_graphic_balls()
         
         self.robot.set(self.initial_pose)
 
-    def save_setting_to_file(self,setting_path):
-        setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
-        with open(setting_path,'wb') as f:
-            pickle.dump(setting,f)
-    def get_setting(self):
-        setting={'starting_point':self.starting_point, 'initial_pose':self.initial_pose,'goal':self.goal,'avoid':self.avoid}
-        return setting
+        self.setting={'initial_pose':self.initial_pose,'goal_1':self.goal_1,'avoid_1':self.avoid_1,'goal_2':self.goal_1,'avoid_2':self.avoid_2}
+
+        with open(os.path.join(self.output_path,'setting.pkl'),'wb') as f:
+            pickle.dump(self.setting,f)
+
     
     def reset(self,**kwargs):
         
@@ -170,8 +154,10 @@ class DoubleReacherEnv(gym.Env):
         return observation,reset_info
     
     def set_and_move_graphic_balls(self):
-        self.goal_ball.changePos(self.goal, 4)
-        self.avoid_ball.changePos(self.avoid, 4)
+        self.goal_ball_1.changePos(self.goal_1, 4)
+        self.avoid_ball_1.changePos(self.avoid_1, 4)
+        self.goal_ball_2.changePos(self.goal_2, 4)
+        self.avoid_ball_2.changePos(self.avoid_2, 4)
 
         for _ in range(25):
             self.robot.step()
@@ -274,8 +260,10 @@ class DoubleReacherEnv(gym.Env):
         self.frames=[]
         self.image_size=(640,480)
         self.fps=5
-        self.goal_ball=Ball(self.urdf_dir,color="green")
-        self.avoid_ball=Ball(self.urdf_dir,color="red")
+        self.goal_ball_1=Ball(self.urdf_dir,color="green")
+        self.avoid_ball_1=Ball(self.urdf_dir,color="red")
+        self.goal_ball_2=Ball(self.urdf_dir,color="green")
+        self.avoid_ball_2=Ball(self.urdf_dir,color="red")
         self.video_mode=True
 
     def disable_video_mode(self):
@@ -289,14 +277,10 @@ class DoubleReacherEnv(gym.Env):
     
     def close(self):
         self.robot.close()
-    def distance_from_goal(self):
-        return np.linalg.norm(self.goal-self.get_position_of_end_effector())
     def distance_from_goal_1(self):
         return np.linalg.norm(self.goal_1-self.get_position_of_end_effector())
     def distance_from_goal_2(self):
         return np.linalg.norm(self.goal_2-self.get_position_of_end_effector())
-    def distance_from_avoid(self):
-        return np.linalg.norm(self.avoid-self.get_position_of_end_effector())
     def distance_from_avoid_1(self):
         return np.linalg.norm(self.avoid_1-self.get_position_of_end_effector())
     def distance_from_avoid_2(self):
