@@ -31,7 +31,7 @@ if __name__=="__main__":
     model_path=os.path.join(output_path,'model')
 
     if double:
-        environment=make_vec_env(DoubleReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path})
+        environment=DoubleReacherEnv(max_steps=max_steps,output_path=output_path)
     else:
         environment=make_vec_env(SingleReacherEnv,n_envs=n_envs,vec_env_cls=SubprocVecEnv,env_kwargs={'max_steps':max_steps,'output_path':output_path,'hard_reward':hard_reward})
         

@@ -14,7 +14,7 @@ from utils.utils import copy_urdf_directory
 urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 
 class DoubleReacherEnv(gym.Env):
-    def __init__(self,urdf_dir=urdf_default_dir,max_steps=100,output_path=os.getcwd()):
+    def __init__(self,urdf_dir=urdf_default_dir,max_steps=500,output_path=os.getcwd()):
         super().__init__()
         self.observation_space = spaces.Box(low=-1, high=1, shape=(15,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
@@ -28,6 +28,7 @@ class DoubleReacherEnv(gym.Env):
         self.robot = SingleRobot(urdf_dir=self.urdf_dir)
 
         self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
+        self.hard_sphere_radius=2*self.sphere_radius
         self.necessary_distance= self.sphere_radius/2
         self.min_distance=0.1
         self.max_iterations_to_check_point=500
@@ -52,7 +53,6 @@ class DoubleReacherEnv(gym.Env):
 
         first_part_formula=["and",reach_1_formula,globally_avoid_formula]
         second_part_formula=["and",reach_2_formula,globally_avoid_formula]
-
 
         requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_formula]
         reward_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_hard_formula]
@@ -191,11 +191,11 @@ class DoubleReacherEnv(gym.Env):
 
         goal_signal_1=self.sphere_radius-distance_from_goal_1
         avoid_collision_signal_1=distance_from_avoid_1-self.sphere_radius
-        avoid_near_signal_1=1.5*(distance_from_avoid_1-2*self.sphere_radius)
+        avoid_near_signal_1=1.5*(distance_from_avoid_1-self.hard_sphere_radius)
 
         goal_signal_2=self.sphere_radius-distance_from_goal_2
         avoid_collision_signal_2=distance_from_avoid_2-self.sphere_radius
-        avoid_near_signal_2=1.5*(distance_from_avoid_2-2*self.sphere_radius)
+        avoid_near_signal_2=1.5*(distance_from_avoid_2-self.hard_sphere_radius)
 
         signals=np.array([goal_signal_1,avoid_collision_signal_1,avoid_near_signal_1,goal_signal_2,avoid_collision_signal_2,avoid_near_signal_2])
 
@@ -204,14 +204,12 @@ class DoubleReacherEnv(gym.Env):
         self.first_part_evaluator.append_signals(signals)
         self.second_part_evaluator.append_signals(signals)
         
-        robustness=self.requirement_evaluating_function(0)
         reward=self.reward_evaluating_function(0)
-        first_part=self.first_part_evaluating_function(0)
-        second_part=self.second_part_evaluating_function(0)
 
-        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':robustness}
+        info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':0}
 
         if self.steps>self.max_steps:
+            robustness=self.requirement_evaluating_function(0)
             terminated=True
             if robustness>0:
                 end_condition='perfect'
@@ -220,8 +218,8 @@ class DoubleReacherEnv(gym.Env):
             else:
                 end_condition='no_part_completed'
 
-        if (terminated or truncated):
             info['end_condition']=end_condition
+            info['requirement_robustness']=self.requirement_evaluating_function(0)
             self.episodes+=1
         
         return reward, terminated, truncated, info
