@@ -22,7 +22,7 @@ class STLEvaluator:
     def and_robustness(self,function_1,function_2,t):
         return np.min([function_1(t),function_2(t)])    
 
-    def incremental_robustness(self,function,signal_index,t,prev=None,is_F=True):
+    def incremental_robustness(self,function,signal_index,t,operator,prev=None):
         """
         A generic incremental robustness function for both F (Eventually) and G (Globally).
         
@@ -30,21 +30,24 @@ class STLEvaluator:
         :param signal: The signal over which robustness is computed.
         :param t: The current time step.
         :param prev: Previous robustness value and window (tuple).
-        :param is_F: If True, computes eventually robustness (F). If False, computes globally robustness (G).
+        :param operator: If 'F', computes eventually robustness (F). If 'G', computes globally robustness (G).
         :return: The updated robustness value and the sliding window.
         """
         if prev is None:
             #if no previous, compute from scratch
-            return self.F_robustness(function,signal_index,t) if is_F else self.G_robustness(function,signal_index,t)
-        #compute robustness at current timestep
-        robustness_value=function(len(self.signals[signal_index])-1)
-        if is_F:
-            new_val=max(prev,robustness_value)
-        else:
-            new_val=min(prev,robustness_value)
-        
-        return new_val
-    def evaluate(self,inner_formula,signal_index,t,key,is_F):
+            if operator=='F':
+                return self.F_robustness(function,signal_index,t)
+            elif operator=='G': 
+                return self.G_robustness(function,signal_index,t)
+        else:   #compute robustness at current timestep
+
+            robustness_value=function(len(self.signals[signal_index])-1)
+            if operator=='F':
+                new_val=max(prev,robustness_value)
+            elif operator=='G':
+                new_val=min(prev,robustness_value)
+            return new_val
+    def evaluate(self,inner_formula,signal_index,t,operator,key):
         """
         Generic helper function to evaluate F (Eventually) and G (Globally) robustness.
         
@@ -52,11 +55,14 @@ class STLEvaluator:
         :param signal: The signal over which the robustness is computed.
         :param t: The current time step.
         :param prev_results: The dictionary storing previous robustness values and windows.
-        :param is_F: If True, computes Eventually robustness (F). If False, computes Globally robustness (G).
+        :param operator: If 'F', computes Eventually robustness (F). If 'G', computes Globally robustness (G).
         :return: The robustness value at time t.
         """
-        result=self.incremental_robustness(inner_formula,signal_index,t,self.prev_results[key].get(t),is_F)
-        self.prev_results[key][t]=result
+        prev_results=self.prev_results[key] if key in self.prev_results else None
+        prev=prev_results.get(t) if prev_results is not None else None
+        result=self.incremental_robustness(inner_formula,signal_index,t,operator,prev)
+        if prev_results is not None:
+            self.prev_results[key][t]=result
         return result
 
     def apply_formula(self,formula=None):
@@ -75,28 +81,27 @@ class STLEvaluator:
             formula=self.formula
         if isinstance(formula,int): #base case:the formula is the index of the signal
             return lambda t: self.robustness(formula,t) 
-        
-        operator=formula[0]
+        else:
+            operator=formula[0]
 
-        if operator in ['F','G']:
-            is_F= operator=='F'
-            key=(operator,str(formula[1]))
-            if key not in self.prev_results:
-                self.prev_results[key] = {}
-            inner_formula=self.apply_formula(formula[1])
-            signal_index=self.get_signal_index(formula[1])
-            return lambda t: self.evaluate(inner_formula,signal_index,t,key,is_F=is_F)
-        
-        elif operator=='and':
-            key_left = ('and_left', str(formula[1]))
-            key_right = ('and_right', str(formula[2]))
-            if key_left not in self.prev_results:
-                self.prev_results[key_left] = {}
-            if key_right not in self.prev_results:
-                self.prev_results[key_right] = {}
-            left_formula=self.apply_formula(formula[1])
-            right_formula=self.apply_formula(formula[2])
-            return lambda t: self.and_robustness(left_formula,right_formula,t)
+            if operator in ['F','G']:
+                key=(operator,str(formula[1]))
+                if key not in self.prev_results and isinstance(formula[1],int): #i store the previous results on forumlas operating on the signal
+                    self.prev_results[key] = {}
+                inner_formula=self.apply_formula(formula[1])
+                signal_index=self.get_signal_index(formula[1])
+                return lambda t: self.evaluate(inner_formula,signal_index,t,operator,key)
+            
+            elif operator=='and':
+                key_left = ('and_left', str(formula[1]))
+                key_right = ('and_right', str(formula[2]))
+                if key_left not in self.prev_results:
+                    self.prev_results[key_left] = {}
+                if key_right not in self.prev_results:
+                    self.prev_results[key_right] = {}
+                left_formula=self.apply_formula(formula[1])
+                right_formula=self.apply_formula(formula[2])
+                return lambda t: self.and_robustness(left_formula,right_formula,t)
 
     def get_signal_index(self, formula):
         """
@@ -125,6 +130,7 @@ class STLEvaluator:
     def reset_signals(self):
         self.signals=[[] for _ in range (len(self.signals))]
         self.prev_results={}
+
 
 """
 x=[-1]

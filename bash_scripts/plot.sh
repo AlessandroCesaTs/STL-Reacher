@@ -10,21 +10,17 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-output_path=$(pwd)/outputs/${1:-output}
+double=${1:-'--double'}
+plot_test=${2:'--plot_test'}
+output_path=$(pwd)/outputs/${3:-output}
+
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
-
-if i_am_on_slurm; then
-    test_runs=5
-else
-    test_runs=1
-fi
-
 
 source env/bin/activate
 
 echo "Start Plotting"
 
-srun_if_on_slurm python3 src/plot_results.py --num_of_robustnesses=2 --test_runs=${test_runs} --output_path=${output_path}
+srun_if_on_slurm python3 src/plot_results.py ${double} ${plot_test} --output_path=${output_path}
 
 echo "Done Plotting"
