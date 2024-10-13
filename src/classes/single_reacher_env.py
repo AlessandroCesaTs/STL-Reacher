@@ -79,6 +79,7 @@ class SingleReacherEnv(gym.Env):
     def set_setting_from_file(self,file):
         with open(file, 'rb') as f:
             setting = pickle.load(f)
+        #print(f"setting is {setting}",flush=True)
         self.starting_point=setting['starting_point']
         self.initial_pose=setting['initial_pose']
         self.goal=setting['goal']
@@ -273,6 +274,7 @@ class SingleReacherEnv(gym.Env):
 
     def _get_obs(self):
         observation=self.robot.observe()
+        print(f"observation is {observation}")
         position_of_end_effector=self.get_position_of_end_effector()
         obs=np.concatenate([observation,position_of_end_effector])
         return obs

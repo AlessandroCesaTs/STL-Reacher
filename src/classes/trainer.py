@@ -44,12 +44,15 @@ class Trainer:
 
         for run in range(test_runs):
             observation,info=self.environment.env_method('reset',indices=0)[0] if self.is_vectorized_environment else self.environment.reset()[0]
+            print(f"observation is {observation}")
             terminated=False
             truncated=False
 
             while not (terminated or truncated):
                 action,_states=self.model.predict(observation)
+                #print(f"action is {action}")
                 observation, reward, terminated, truncated, info = self.environment.env_method('step',action,indices=0)[0] if self.is_vectorized_environment else self.environment.step(action)
+                #print(f"observation is {observation}")
 
                 if terminated or truncated:
                     robustness=info['requirement_robustness']
