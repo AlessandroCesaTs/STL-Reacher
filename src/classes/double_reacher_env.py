@@ -16,7 +16,7 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class DoubleReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,max_steps=500,output_path=os.getcwd()):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(15,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
@@ -290,7 +290,7 @@ class DoubleReacherEnv(gym.Env):
         self.video_mode=False
 
     def _get_obs(self):
-        observation=self.robot.observe()
+        observation=self.robot.observe()[:6]
         position_of_end_effector=self.get_position_of_end_effector()
         obs=np.concatenate([observation,position_of_end_effector])
         return obs
