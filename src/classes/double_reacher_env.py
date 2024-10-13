@@ -39,7 +39,7 @@ class DoubleReacherEnv(gym.Env):
         self.episodes=0
         self.new_start_goal_avoid()
 
-        self.goal=0
+        self.goal_index=0
         self.robot.set(self.initial_pose)
 
         signals=[[],[],[],[],[],[]]
@@ -53,6 +53,8 @@ class DoubleReacherEnv(gym.Env):
 
         first_part_formula=["and",reach_1_formula,globally_avoid_formula]
         second_part_formula=["and",reach_2_formula,globally_avoid_formula]
+        first_part_hard_formula=["and",reach_1_formula,globally_avoid_hard_formula]
+        second_part_hard_formula=["and",reach_2_formula,globally_avoid_hard_formula]
 
         requirement_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_formula]
         reward_formula=["and",eventually_reach_1_and_eventually_reach_2_formula,globally_avoid_hard_formula]
@@ -60,14 +62,21 @@ class DoubleReacherEnv(gym.Env):
         self.requirement_evaluator=STLEvaluator(signals,requirement_formula)
         self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
         
-        self.reward_evaluator=STLEvaluator(signals,reward_formula)
-        self.reward_evaluating_function=self.reward_evaluator.apply_formula()
+        #self.reward_evaluator=STLEvaluator(signals,reward_formula)
+        #self.reward_evaluating_function=self.reward_evaluator.apply_formula()
         
         self.first_part_evaluator=STLEvaluator(signals,first_part_formula)
         self.first_part_evaluating_function=self.first_part_evaluator.apply_formula()
 
         self.second_part_evaluator=STLEvaluator(signals,second_part_formula)
         self.second_part_evaluating_function=self.second_part_evaluator.apply_formula()
+
+        #self.first_part_hard_evaluator=STLEvaluator(signals,first_part_hard_formula)
+        #self.first_part_hard_evaluating_function=self.first_part_hard_evaluator.apply_formula()
+
+        #self.second_part_hard_evaluator=STLEvaluator(signals,second_part_hard_formula)
+        #self.second_part_hard_evaluating_function=self.second_part_hard_evaluator.apply_formula()
+
         
 
     def set_setting_from_file(self,file):
@@ -135,14 +144,18 @@ class DoubleReacherEnv(gym.Env):
         self.robot.set(self.initial_pose)
 
         self.requirement_evaluator.reset_signals()
-        self.reward_evaluator.reset_signals()
+        #self.reward_evaluator.reset_signals()
         self.first_part_evaluator.reset_signals()  
         self.second_part_evaluator.reset_signals()
+        #self.first_part_hard_evaluator.reset_signals()
+        #self.second_part_hard_evaluator.reset_signals()
         
         self.requirement_evaluating_function=self.requirement_evaluator.apply_formula()
-        self.reward_evaluating_function=self.reward_evaluator.apply_formula()
+        #self.reward_evaluating_function=self.reward_evaluator.apply_formula()
         self.first_part_evaluating_function=self.first_part_evaluator.apply_formula()
         self.second_part_evaluating_function=self.second_part_evaluator.apply_formula()
+        #self.first_part_hard_evaluating_function=self.first_part_hard_evaluator.apply_formula()
+        #self.second_part_hard_evaluating_function=self.second_part_hard_evaluator.apply_formula()
 
 
         observation=self._get_obs()
@@ -200,12 +213,21 @@ class DoubleReacherEnv(gym.Env):
         signals=np.array([goal_signal_1,avoid_collision_signal_1,avoid_near_signal_1,goal_signal_2,avoid_collision_signal_2,avoid_near_signal_2])
 
         self.requirement_evaluator.append_signals(signals)
-        self.reward_evaluator.append_signals(signals)
+        #self.reward_evaluator.append_signals(signals)
         self.first_part_evaluator.append_signals(signals)
         self.second_part_evaluator.append_signals(signals)
-        
-        reward=self.reward_evaluating_function(0)
+        #self.first_part_hard_evaluator.append_signals(signals)
+        #self.second_part_hard_evaluator.append_signals(signals)
 
+        if self.goal_index==0:
+            reward=self.first_part_evaluating_function(0)
+            if reward>0:
+                self.goal_index+=1
+                self.reach_first_step=self.steps
+        else:
+            reward=self.second_part_evaluating_function(0)
+
+        
         info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':0}
 
         if self.steps>self.max_steps:
@@ -213,7 +235,7 @@ class DoubleReacherEnv(gym.Env):
             terminated=True
             if robustness>0:
                 end_condition='perfect'
-            elif self.first_part_evaluating_function(0)>0:
+            elif self.goal_index==1:
                 end_condition='first_part_completed_but_not_second'
             else:
                 end_condition='no_part_completed'
