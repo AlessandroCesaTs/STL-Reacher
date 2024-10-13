@@ -8,8 +8,15 @@ single_end_conditions_color_dict={'reach_stay_no_collision':'green','reach_no_st
                             'no_reach_no_collision':'gray',
                             'no_reach_collision':'black'}
 
+single_end_labels_dict={'reach_stay_no_collision':"Goal reached, stayed on goal, no collision",'reach_no_stay_no_collision':"Goal reahced, didn't stay on goal, no collision",
+                            'reach_stay_collision':"Goal reached, stayed on goal, collision",'reach_no_stay_collision':"Goal reahced, didn't stay on goal, collision",
+                            'no_reach_no_collision':"Didn't reach goal, no collision",
+                            'no_reach_collision':"Didn't reach goal, collision"}
+
 double_end_conditions_color_dict={'perfect':'green','first_part_completed_but_not_second':'red',
                             'no_part_completed':'black'}
+double_end_conditions_labels_dict={'perfect':"Perfect Episode",'first_part_completed_but_not_second':"Completed first part but not second",
+                            'no_part_completed':"Not completed first part"}
 
 def plot_training(logs_path,plots_path):
     dataframe = pd.read_csv(os.path.join(logs_path, f"training.csv"))

@@ -33,6 +33,7 @@ if __name__=="__main__":
     n_epochs=args.n_epochs
     n_envs=get_num_cpus()
 
+
     os.makedirs(output_path,exist_ok=True)
 
     if double:

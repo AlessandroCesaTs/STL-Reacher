@@ -10,15 +10,14 @@
 #SBATCH --no-requeue
 #SBATCH --get-user-env
 
-change_target=${1:-'--double'}
+double=${1:-'--double'}
 hard_reward=${2:-'--hard_reward'}
 output_path=$(pwd)/outputs/${3:-'output'}
-
 
 source bash_scripts/slurm_utils.sh  #get slurm utils functions
 
 if i_am_on_slurm; then
-    total_timesteps=1814400
+    total_timesteps=725000
     n_steps=500
     n_epochs=10
     max_steps=1000
