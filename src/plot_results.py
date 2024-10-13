@@ -28,19 +28,6 @@ if __name__=="__main__":
         
         plot_training_end(train_logs_path,train_plots_path,double)
 
-    if plot_test:
-
-        test_logs_path=os.path.join(output_path,'test','logs')
-
-        test_plots_path=os.path.join(output_path,'test','plots')
-        os.makedirs(test_plots_path,exist_ok=True)
-        
-        plot_test_end_condition(test_logs_path,test_plots_path,double)
-
-
-
-    
-
 
 
     

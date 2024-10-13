@@ -15,7 +15,7 @@ single_end_labels_dict={'reach_stay_no_collision':"Goal reached, stayed on goal,
 
 double_end_conditions_color_dict={'perfect':'green','first_part_completed_but_not_second':'red',
                             'no_part_completed':'black'}
-double_end_conditions_labels_dict={'perfect':"Perfect Episode",'first_part_completed_but_not_second':"Completed first part but not second",
+double_end_labels_dict={'perfect':"Perfect Episode",'first_part_completed_but_not_second':"Completed first part but not second",
                             'no_part_completed':"Not completed first part"}
 
 def plot_training(logs_path,plots_path):
@@ -61,8 +61,10 @@ def plot_training_end(logs_path, plots_path,double=False):
 
     plt.scatter(dataframe['Total_Episode'], dataframe["Robustness"], color=colors)
 
-    legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in single_end_conditions_color_dict.items()]
-
+    if double:
+        legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in double_end_conditions_color_dict.items()]
+    else:
+        legend_elements=[Line2D([0], [0], marker='o', color='w', label=key, markerfacecolor=value, markersize=10) for key,value in single_end_labels_dict.items()]
     plt.legend(handles=legend_elements, loc="lower right", title="End Condition")
 
     plt.xlabel("Episode")

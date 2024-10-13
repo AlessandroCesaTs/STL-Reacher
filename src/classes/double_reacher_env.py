@@ -16,7 +16,7 @@ urdf_default_dir='env/lib/python3.12/site-packages/gym_ergojr/scenes/'
 class DoubleReacherEnv(gym.Env):
     def __init__(self,urdf_dir=urdf_default_dir,max_steps=500,output_path=os.getcwd()):
         super().__init__()
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(6,), dtype=np.float32)
         self.output_path=output_path
 
@@ -26,6 +26,8 @@ class DoubleReacherEnv(gym.Env):
         self.rhis = RandomPointInHalfSphere(0,0,0,radius=0.2,min_dist=0.1)
 
         self.robot = SingleRobot(urdf_dir=self.urdf_dir)
+
+        self.first_complete=False
 
         self.sphere_radius = 0.02  # distance between robot tip and goal under which the task is considered solved
         self.hard_sphere_radius=2*self.sphere_radius
@@ -44,12 +46,12 @@ class DoubleReacherEnv(gym.Env):
 
         signals=[[],[],[],[],[],[]]
 
-        reach_1_formula=["F",0]
+        reach_1_formula=["F",["G",0]]
         reach_2_formula=["F",["G",3]]
 
         eventually_reach_1_and_eventually_reach_2_formula=["F",["and",0,["F",["G",3]]]]
-        globally_avoid_formula=["G",["and",1,3]]
-        globally_avoid_hard_formula=["G",["and",2,4]]
+        globally_avoid_formula=["G",["and",1,4]]
+        globally_avoid_hard_formula=["G",["and",2,5]]
 
         first_part_formula=["and",reach_1_formula,globally_avoid_formula]
         second_part_formula=["and",reach_2_formula,globally_avoid_formula]
@@ -98,7 +100,7 @@ class DoubleReacherEnv(gym.Env):
         
         points_found=False
         while not points_found:
-            self.goal_1,_=self.get_reachable_point()
+            self.goal_1,self.second_initial_pose=self.get_reachable_point()
             start_goal_distance=np.linalg.norm(starting_point - self.goal_1)
             if start_goal_distance<self.min_distance:
                 points_found=False
@@ -138,6 +140,9 @@ class DoubleReacherEnv(gym.Env):
 
     
     def reset(self,**kwargs):
+
+        self.first_complete=False
+        self.goal_index=0
         
         self.steps=0
         
@@ -219,23 +224,29 @@ class DoubleReacherEnv(gym.Env):
         #self.first_part_hard_evaluator.append_signals(signals)
         #self.second_part_hard_evaluator.append_signals(signals)
 
+
         if self.goal_index==0:
             reward=self.first_part_evaluating_function(0)
             if reward>0:
+            #if self.first_part_evaluating_function(0)>0:
+                self.first_complete=True
+            #if self.steps>self.max_steps/2:
                 self.goal_index+=1
-                self.reach_first_step=self.steps
+                #self.robot.set(self.second_initial_pose)
+                #self.reach_first_step=self.steps
         else:
             reward=self.second_part_evaluating_function(0)
-
+            if reward>0:
+                print("reached both")
         
         info={'episode_number':self.episodes,'step':self.steps,'requirement_robustness':0}
 
         if self.steps>self.max_steps:
             robustness=self.requirement_evaluating_function(0)
             terminated=True
-            if robustness>0:
+            if robustness>0 or (self.first_complete and reward>0):
                 end_condition='perfect'
-            elif self.goal_index==1:
+            elif self.first_complete:
                 end_condition='first_part_completed_but_not_second'
             else:
                 end_condition='no_part_completed'
@@ -292,7 +303,7 @@ class DoubleReacherEnv(gym.Env):
     def _get_obs(self):
         observation=self.robot.observe()[:6]
         position_of_end_effector=self.get_position_of_end_effector()
-        obs=np.concatenate([observation,position_of_end_effector])
+        obs=np.concatenate([observation,position_of_end_effector,[self.goal_index]])
         return obs
     
     def close(self):
@@ -333,5 +344,3 @@ class DoubleReacherEnv(gym.Env):
             reachable=False
         return reachable,joints_positions_velocities
     
-        
-

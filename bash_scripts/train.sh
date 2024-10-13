@@ -20,7 +20,7 @@ if i_am_on_slurm; then
     total_timesteps=362500
     n_steps=500
     n_epochs=10
-    max_steps=1000
+    max_steps=2000
 else
     total_timesteps=256
     n_steps=128
