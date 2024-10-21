@@ -13,5 +13,5 @@ if i_am_on_slurm; then
 else
     bash_scripts/train.sh '--double' '--hard_reward'
     bash_scripts/test.sh '--double' '--hard_reward'
-    bash_scripts/plot.sh '--double' 
+    #bash_scripts/plot.sh '--double' 
 fi

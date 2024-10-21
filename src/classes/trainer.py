@@ -81,8 +81,8 @@ class Trainer:
 
         write_to_csv(end_conditions_log_path,['Run','Robustness','End_Condition'],'w')
 
-        for run in range(test_runs):
-            observation,info=self.environment.env_method('reset',indices=0)[0] if self.is_vectorized_environment else self.environment.reset()[0]
+        for run in range(1):
+            observation,info=self.environment.reset()
 
             terminated=False
             truncated=False

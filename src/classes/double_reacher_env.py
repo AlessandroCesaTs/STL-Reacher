@@ -113,6 +113,7 @@ class DoubleReacherEnv(gym.Env):
                 if avoid_is_reachable:
                     self.goal_2,_=self.get_reachable_point()
                     start_goal_distance=np.linalg.norm(self.goal_1 - self.goal_2)
+                    print(f"goal_1 {self.goal_1} gol_2 {self.goal_2} dist is {start_goal_distance}")
                     if start_goal_distance<self.min_distance:
                         points_found=False
                     else:
@@ -133,7 +134,7 @@ class DoubleReacherEnv(gym.Env):
         
         self.robot.set(self.initial_pose)
 
-        self.setting={'initial_pose':self.initial_pose,'goal_1':self.goal_1,'avoid_1':self.avoid_1,'goal_2':self.goal_1,'avoid_2':self.avoid_2}
+        self.setting={'initial_pose':self.initial_pose,'goal_1':self.goal_1,'avoid_1':self.avoid_1,'goal_2':self.goal_2,'avoid_2':self.avoid_2}
 
         with open(os.path.join(self.output_path,'setting.pkl'),'wb') as f:
             pickle.dump(self.setting,f)
@@ -172,6 +173,7 @@ class DoubleReacherEnv(gym.Env):
         return observation,reset_info
     
     def set_and_move_graphic_balls(self):
+        print([self.goal_1,self.goal_2,self.avoid_1,self.avoid_2])
         self.goal_ball_1.changePos(self.goal_1, 4)
         self.avoid_ball_1.changePos(self.avoid_1, 4)
         self.goal_ball_2.changePos(self.goal_2, 4)
